@@ -1,13 +1,8 @@
 <template>
   <div class="common-layout">
     <el-container class="container">
-      <el-header>商讯科技</el-header>
+      <el-header>商讯科技3</el-header>
       <el-container>
-        <!--  公司列表      -->
-<!--        <el-aside width="200px">-->
-<!--          <Aside/>-->
-<!--        </el-aside>-->
-        <!--    主体内容    -->
         <el-main>
           <Main/>
         </el-main>
@@ -17,7 +12,6 @@
 </template>
 
 <script setup>
-// import Aside from "@/views/Company/components/Aside.vue";
 import Main from "./components/Main.vue";
 
 // 页面初始化
@@ -27,7 +21,7 @@ import Main from "./components/Main.vue";
 
 <style scoped lang="scss">
 .container {
-  width: 1300px;
+  width: 1400px;
   height: 800px;
   margin: 0 auto;
 

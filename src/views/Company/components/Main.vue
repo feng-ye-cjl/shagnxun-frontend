@@ -9,6 +9,19 @@
         <el-button type="primary" @click="getCompanyEntity">确认</el-button>
       </div>
       <div class="select">
+        <!--类型-->
+        <el-select
+            v-model="typeName"
+            placeholder="类型"
+            style="width: 150px;margin-right: 30px">
+          <el-option
+              v-for="item in typeArr"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+              @click="selectTypeFn(item.value)"
+          />
+        </el-select>
         <!--主体-->
         <el-select
             v-model="entityName"
@@ -38,12 +51,13 @@
       </div>
       <!--   公司信息   -->
       <div class="companyInfo">
+        <el-input class="in" v-model="entityInfo.groupEntityCode" placeholder="类型代码"/>
         <el-input class="in" v-model="entityInfo.entityCode" placeholder="主体代码"/>
         <el-input class="in" v-model="entityInfo.codeName" placeholder="主体名称"/>
         <el-input class="in" v-model="entityInfo.entityType" placeholder="子主体代码"/>
         <el-input class="in" v-model="entityInfo.typeName" placeholder="子主体名称"/>
         <!--   新增按钮     -->
-        <el-button type="primary">新增</el-button>
+        <el-button type="primary" @click="addCompanyEntityClick">新增</el-button>
       </div>
       <!--公司主体和子主体表格-->
       <el-table :data="entityList" style="width: 100%">
@@ -64,6 +78,18 @@
                 type="danger"
                 @click="handleDelete(scope.$index, scope.row)">
               删除
+            </el-button>
+            <el-button
+                size="small"
+                type="primary"
+                @click="handleJump(scope.$index, scope.row)">
+              消息
+            </el-button>
+            <el-button
+                size="small"
+                type="primary"
+                @click="toPage(scope.$index, scope.row)">
+              页面
             </el-button>
           </template>
         </el-table-column>
@@ -114,9 +140,19 @@
   </div>
 </template>
 <script setup>
-import {computed, ref, reactive, onMounted} from 'vue'
-import axios from "axios";
-import {getCompanyAPI, getCompanyEntityProperty} from "@/apis/company.js";
+import {ref, reactive, onMounted} from 'vue'
+import companyApi from "@/apis/company.js";
+import {useRouter} from "vue-router";
+import {useCompanyStore} from "@/stores/company.js";
+
+// 使用pinia
+const companyStore = useCompanyStore()
+
+// 路由
+const router = useRouter()
+
+// 类型列表
+const typeArr = ref([])
 
 // 主体名称列表
 const entityArr = ref([])
@@ -126,20 +162,23 @@ const allEntityList = ref([])
 const entityChildArr = ref([])
 // {value:'111',label:'111}
 // 当前主体名称
+const typeName = ref('')
+// 当前主体名称
 const entityName = ref('')
 // 当前子主体名称
 const entityChildName = ref('')
 // 输入框数据
-const input = ref('')
-// 表格数据
-const search = ref('')
-const filterTableData = computed(() =>
-    tableData.filter(
-        (data) =>
-            !search.value ||
-            data.name.toLowerCase().includes(search.value.toLowerCase())
-    )
-)
+// const input = ref('')
+// // 表格数据
+// const search = ref('')
+const entityInfo = ref({})
+// const filterTableData = computed(() =>
+//     tableData.filter(
+//         (data) =>
+//             !search.value ||
+//             data.name.toLowerCase().includes(search.value.toLowerCase())
+//     )
+// )
 // 当前属性列表数据
 const propertyList = ref({
   fieldList: [],
@@ -148,6 +187,7 @@ const propertyList = ref({
   remarkList: []
 })
 const handleEdit = async (index, row) => {
+  console.log(index, row)
   // 先清空属性列表
   propertyList.value = {
     fieldList: [],
@@ -156,11 +196,11 @@ const handleEdit = async (index, row) => {
     remarkList: []
   }
   // console.log(row)
-  const requestBody = {
-    company_id: row.code,
-    entity_code: row.entityCode,
-    entity_type: row.entityType
-  }
+  // const requestBody = {
+  //   company_id: row.code,
+  //   entity_code: row.entityCode,
+  //   entity_type: row.entityType
+  // }
   // console.log(requestBody)
   // const res = await getCompanyEntityProperty(requestBody)
   const res = [
@@ -426,8 +466,31 @@ const handleDelete = (index, row) => {
   console.log(index, row)
 }
 
+// 点击消息按钮跳转页面
+const handleJump = (index, row) => {
+  // 传递五项数据，公司id，主体代码，主体名称，子主体代码，子主体名称
+  const companyInfo = {
+    companyId: companyId.value,
+    entityCode: row.entityCode,
+    entityName: row.codeName,
+    childEntityCode: row.entityType,
+    childEntityName: row.typeName
+  }
+  console.log(companyInfo)
+  // 将数据存如pinia
+  companyStore.setCompanyInfo(companyInfo)
+  console.log(companyStore.companyInfo)
+  // 路由跳转
+  router.push('/company2')
+}
+
+const toPage = (index, row) => {
+  console.log(index, row)
+  router.push('/company3')
+};
+
 // 表格数据
-const tableData = ref([])
+// const tableData = ref([])
 // 公司主体表格列表
 const entityList = ref([])
 // 公司id
@@ -439,17 +502,62 @@ const getCompanyEntity = async () => {
     company_id: companyId.value,
     group_entity_code: '101'
   }
-  /*axios.get(
-      `http://140.143.154.96/day07/getCompanyEntitycode?company_id=${companyId.value}&group_entity_code=000`
-  ).then(res => {
-    // console.log(res.data)
-    entityList.value = res.data.filter(item => item.code === id);
-  })*/
-  const res = await getCompanyAPI(requestBody)
+  const res = await companyApi.getCompany(requestBody)
   console.log(res)
   // entityList.value = res.filter(item => item.code === Number(companyId.value));
   entityList.value = res
 }
+
+
+// 根据公司id获取公司列表数据用于渲染到表格
+const addCompanyEntityClick = async () => {
+  // 构造请求对象
+  console.log('addCompanyEntity entityInfo', entityInfo);
+  const requestBody = {
+    company_id: companyId.value,
+    group_entity_code: '08',
+    entity_code: '09',
+    code_name: '10',
+    entity_type: '11',
+    type_name: '12'
+
+    //group_entity_code: entityInfo.value.groupEntityCode,
+    //entity_code:entityInfo.value.entityCode,
+    //code_name:entityInfo.value.codeName,
+    //entity_type:entityInfo.value.entityType,
+    //type_name:entityInfo.value.typeName
+  }
+  console.log('requestBody=', requestBody.entity_code);
+
+
+  // const res = await addCompanyEntity(requestBody)
+  // console.log('主体增加返回', res);
+  // entityList.value = res.filter(item => item.code === Number(companyId.value));
+  // entityList.value = res
+}
+
+
+// 根据类型查找主体
+const selectTypeFn = (code) => {
+  // 获取之前先清空子实体数组
+  entityArr.value = []
+  // 根据类型名称获取当前主体项中的子主体列表
+  console.log('xpa1')
+  console.log(allEntityList.value)
+  allEntityList.value.forEach(item => {
+    // console.log(code === item.entityCode)
+    if (code === item.groupEntityCode) {
+      if (item.entityType == '') {
+        entityArr.value.push({
+          value: item.entityCode,
+          label: item.codeName,
+        })
+      }
+    }
+  })
+  console.log(entityArr);
+}
+
 // 根据主体查找子主体
 const selectFn = (code) => {
   // 获取之前先清空子实体数组
@@ -468,7 +576,6 @@ const selectFn = (code) => {
   console.log(entityChildArr.value)
 }
 
-const entityInfo = ref({})
 
 const getCompanyDetail = code => {
   console.log(allEntityList.value)
@@ -478,6 +585,8 @@ const getCompanyDetail = code => {
       entityInfo.value = {...item}
     }
   })
+  console.log('entityInfo=', entityInfo.value.entityCode);
+
 }
 
 
@@ -505,29 +614,25 @@ const init = async () => {
     company_id: '00000',
     group_entity_code: '000'
   }
-  // console.log(requestBody)
-  /*axios.get(
-      `http://140.143.154.96/day07/getCompanyEntitycode?company_id=${requestBody.company_id}&group_entity_code=${requestBody.group_entity_code}`
-  ).then(res => {
-    allEntityList.value = res.data
-    res.data.forEach(item => {
-      entityArr.value.push({
-        value: item.entityCode,
-        label: item.codeName,
-        childArr: []
-      })
-    })
-    for (let i = 0; i < entityArr.value.length; i++) {
-      for (let j = i + 1; j < entityArr.value.length; j++) {
-        if (entityArr.value[i].value === entityArr.value[j].value) {
-          entityArr.value.splice(j, 1)
-        }
-      }
-    }
-    console.log(entityArr.value)
-  })*/
+  typeArr.value.push({
+    value: '01',
+    label: '销售',
+
+  })
+  typeArr.value.push({
+    value: '02',
+    label: '产业',
+
+  })
+  typeArr.value.push({
+    value: '03',
+    label: '办公',
+
+  })
+
+
   // 使用封装的请求方法
-  const res = await getCompanyAPI(requestBody)
+  const res = await companyApi.getCompany(requestBody)
   allEntityList.value = res
   res.forEach(item => {
     entityArr.value.push({
