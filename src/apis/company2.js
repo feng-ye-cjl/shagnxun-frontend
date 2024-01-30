@@ -38,11 +38,60 @@ function addEntityPageRouter(data) {
     return requestUrl(data, '/addEntityPageRouter')
 }
 
+function addCompanyEntityProperty(data) {
+    return requestUrl(data, '/addCompanyEntityproperty')
+}
+
+/**
+ * 主体事件查询接口
+ * @param data
+ * @returns {*}
+ */
+function getEntityEventList2(data) {
+    return requestUrl(data, '/getEntityEventLIst2')
+}
+
+/**
+ * 主体事件增加接口（小程序端）
+ * @param data
+ * @returns {*}
+ * @constructor
+ */
+function BusEntityEventServlet(data) {
+    return requestUrl(data, '/BusEntityEventServlet')
+}
+
+/**
+ * 主体事件增加接口（PC端）
+ * @param data
+ * @returns {*}
+ * @constructor
+ */
+function BusEntityEventServlet2(data) {
+    return requestUrl(data, '/BusEntityEventServlet2')
+}
+
+/**
+ * 查询事件属性接口
+ * @param data
+ * @returns {*}
+ */
+function getCompanyEventProperty(data) {
+    return requestUrl(data, '/getCompanyEventproperty')
+}
+
+/**
+ * 事件属性增加接口
+ * @param data
+ * @returns {*}
+ */
+function addCompanyEventProperty(data) {
+    return requestUrl(data, '/addCompanyEventproperty')
+}
 
 
 
-
-
+// 接口总体对象
 const company2Api = {
     getCompanyEntityEvent,
     getCompanyEntityProperty,
@@ -52,7 +101,13 @@ const company2Api = {
     getCompanyRole,
     getEntityPageRouter,
     getEntityPageRouter2,
-    addEntityPageRouter
+    addEntityPageRouter,
+    addCompanyEntityProperty,
+    getEntityEventList2,
+    BusEntityEventServlet,
+    BusEntityEventServlet2,
+    getCompanyEventProperty,
+    addCompanyEventProperty
 }
 
 export default company2Api

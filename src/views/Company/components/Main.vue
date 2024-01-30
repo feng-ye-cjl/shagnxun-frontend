@@ -70,7 +70,7 @@
             操作
           </template>
           <template #default="scope">
-            <el-button size="small" type="info" @click="handleEdit(scope.$index, scope.row)">
+            <el-button size="small" type="info" @click="queryProperty(scope.$index, scope.row)">
               属性
             </el-button>
             <el-button
@@ -91,51 +91,121 @@
                 @click="toPage(scope.$index, scope.row)">
               页面
             </el-button>
+            <el-button
+                size="small"
+                type="primary"
+                @click="toEvent(scope.$index, scope.row)">
+              事件
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
     </div>
     <div class="right">
       <!--   表单   -->
-      <el-form :model="form" label-width="200px">
+      <el-form :model="form">
+        <!--    其他    -->
         <el-form-item
-            :label="'field'+index"
-            v-for="(item,index) in propertyList.fieldList"
+            :label="item.propertyEnglish"
+            v-for="item in propertyList.otherList"
             :key="item.propertyEnglish">
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyChinese"/>
-          <el-input class="form_item" placeholder="类型" v-model="item.propertyType"/>
+          <el-select
+              v-model="item.value"
+              placeholder="类型"
+              style="width: 100px;margin-right: 10px">
+            <el-option
+                v-for="item in propertyTypeList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+                @click="selectTypeFn(item.value)"
+            />
+          </el-select>
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyLength"/>
+          <el-button
+              size="small"
+              type="success"
+              @click="addProperty(scope.$index, scope.row)">
+            增加
+          </el-button>
         </el-form-item>
+        <!--field-->
+        <el-form-item
+            :label="item.propertyEnglish"
+            v-for="item in propertyList.fieldList"
+            :key="item.propertyEnglish">
+          <el-input class="form_item" placeholder="请输入" v-model="item.propertyChinese"/>
+          <el-select
+              v-model="item.value"
+              placeholder="类型"
+              style="width: 100px;margin-right: 10px">
+            <el-option
+                v-for="item in propertyTypeList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+                @click="selectTypeFn(item.value)"
+            />
+          </el-select>
+          <el-input class="form_item" placeholder="请输入" v-model="item.propertyLength"/>
+          <el-button
+              size="small"
+              type="success"
+              @click="addFieldProperty(item)">
+            增加
+          </el-button>
+        </el-form-item>
+        <!--number-->
         <el-form-item
             :label="item.propertyEnglish"
             v-for="item in propertyList.numberList"
             :key="item.propertyEnglish">
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyChinese"/>
-          <el-input class="form_item" placeholder="类型" value="num"/>
+          <el-input class="form_item" placeholder="类型" v-model="item.value"/>
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyLength"/>
+          <el-button
+              size="small"
+              type="success"
+              @click="addNumber(item)">
+            增加
+          </el-button>
         </el-form-item>
+        <!--access-->
         <el-form-item
             :label="item.propertyEnglish"
             v-for="item in propertyList.accessoryList"
             :key="item.propertyEnglish">
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyChinese"/>
-          <el-input class="form_item" placeholder="类型" v-model="item.propertyType"/>
+          <el-input class="form_item" placeholder="类型" v-model="item.value"/>
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyLength"/>
+          <el-button
+              size="small"
+              type="success"
+              @click="addAccessory(item)">
+            增加
+          </el-button>
         </el-form-item>
+        <!--remark-->
         <el-form-item
             :label="item.propertyEnglish"
             v-for="item in propertyList.remarkList"
             :key="item.propertyEnglish">
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyChinese"/>
-          <el-input class="form_item" placeholder="类型" v-model="item.propertyType"/>
+          <el-input class="form_item" placeholder="类型" v-model="item.value"/>
           <el-input class="form_item" placeholder="长度" value="256"/>
+          <el-button
+              size="small"
+              type="success"
+              @click="addRemark(item)">
+            增加
+          </el-button>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="onSubmit">Create</el-button>
+          <el-button type="primary" @click="onSubmit">submit</el-button>
           <el-button>Cancel</el-button>
         </el-form-item>
       </el-form>
-
     </div>
   </div>
 </template>
@@ -144,16 +214,15 @@ import {ref, reactive, onMounted} from 'vue'
 import companyApi from "@/apis/company.js";
 import {useRouter} from "vue-router";
 import {useCompanyStore} from "@/stores/company.js";
+import {ElMessage} from "element-plus";
+import company2Api from "@/apis/company2.js";
 
 // 使用pinia
 const companyStore = useCompanyStore()
-
 // 路由
 const router = useRouter()
-
 // 类型列表
 const typeArr = ref([])
-
 // 主体名称列表
 const entityArr = ref([])
 // 所有主体列表
@@ -167,286 +236,50 @@ const typeName = ref('')
 const entityName = ref('')
 // 当前子主体名称
 const entityChildName = ref('')
-// 输入框数据
-// const input = ref('')
-// // 表格数据
-// const search = ref('')
 const entityInfo = ref({})
-// const filterTableData = computed(() =>
-//     tableData.filter(
-//         (data) =>
-//             !search.value ||
-//             data.name.toLowerCase().includes(search.value.toLowerCase())
-//     )
-// )
 // 当前属性列表数据
 const propertyList = ref({
+  otherList: [],
   fieldList: [],
   numberList: [],
   accessoryList: [],
   remarkList: []
 })
-const handleEdit = async (index, row) => {
-  console.log(index, row)
+// 属性类型列表
+const propertyTypeList = ref([
+  {value: 'char', label: 'char'},
+  {value: 'char0', label: 'char0'},
+  {value: 'dic', label: 'dic'},
+  {value: 'list10', label: 'list10'},
+  {value: 'list11', label: 'list11'}
+])
+// 当前选中的作为属性查询的entityCode和entityType
+const selectEntityCode = ref('')
+const selectEntityType = ref('')
+
+// 查询属性
+const queryProperty = async (index, row) => {
+  console.log('当前行属性条件', index, row)
+  // 保存当前entityCode和entityType
+  selectEntityCode.value = row.entityCode
+  selectEntityType.value = row.entityType
   // 先清空属性列表
   propertyList.value = {
+    otherList: [],
     fieldList: [],
     numberList: [],
     accessoryList: [],
     remarkList: []
   }
-  // console.log(row)
-  // const requestBody = {
-  //   company_id: row.code,
-  //   entity_code: row.entityCode,
-  //   entity_type: row.entityType
-  // }
+  const requestBody = {
+    company_id: companyId.value,
+    entity_code: row.entityCode,
+    entity_type: row.entityType
+  }
   // console.log(requestBody)
-  // const res = await getCompanyEntityProperty(requestBody)
-  const res = [
-    {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "实体编号",
-      "propertyEnglish": "entityNo",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "产品代码",
-      "propertyEnglish": "field0",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "产品名称",
-      "propertyEnglish": "field1",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "家具代码",
-      "propertyEnglish": "field2",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "家具名称",
-      "propertyEnglish": "field3",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "材料代码",
-      "propertyEnglish": "field4",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "材料名称",
-      "propertyEnglish": "field5",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "长",
-      "propertyEnglish": "accessory1",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "宽",
-      "propertyEnglish": "accessory2",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "高",
-      "propertyEnglish": "accessory3",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "当前工种",
-      "propertyEnglish": "accessory5",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "单位",
-      "propertyEnglish": "field6",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "价格",
-      "propertyEnglish": "number0",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "当前工单编号",
-      "propertyEnglish": "field7",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "总价",
-      "propertyEnglish": "number1",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "折后价",
-      "propertyEnglish": "number2",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "备注",
-      "propertyEnglish": "remark",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "总订单编号",
-      "propertyEnglish": "field9",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "订单",
-      "codeNo": "家具子订单",
-      "codeType": "",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "订单名称",
-      "propertyEnglish": "field8",
-      "propertyLength": "32",
-      "propertyType": "char",
-      "typeName": "家具子订单"
-    }, {
-      "code": 0,
-      "codeName": "null",
-      "codeNo": "null",
-      "codeType": "01",
-      "entityCode": "303",
-      "entityType": "32",
-      "propertyChinese": "备注3",
-      "propertyEnglish": "remark3",
-      "propertyLength": "null",
-      "propertyType": "char",
-      "typeName": "null"
-    }]
+  const res = await companyApi.getCompanyEntityProperty(requestBody)
   res.forEach(item => {
-    // console.log(item.propertyEnglish.charAt(0),item.propertyEnglish.charAt(0) === 'f')
+    item.value = ''
     if (item.propertyEnglish.charAt(0) === 'f') {
       propertyList.value.fieldList.push(item)
     } else if (item.propertyEnglish.charAt(0) === 'n') {
@@ -456,12 +289,176 @@ const handleEdit = async (index, row) => {
     } else if (item.propertyEnglish.charAt(0) === 'r') {
       propertyList.value.remarkList.push(item);
     } else {
-      console.log(item)
-      console.log('目标数组不存在')
+      propertyList.value.otherList.push(item);
     }
   })
-  console.log(propertyList.value)
+  // 如果其中一个数组为空则默认填充一条记录
+  if (propertyList.value.fieldList.length === 0) {
+    propertyList.value.fieldList.push({propertyEnglish: 'field0', value: 'char', propertyLength: '32'});
+  }
+  if (propertyList.value.numberList.length === 0) {
+    propertyList.value.numberList.push({propertyEnglish: 'number0', value: 'num', propertyLength: '32'})
+  }
+  if (propertyList.value.accessoryList.length === 0) {
+    propertyList.value.accessoryList.push({propertyEnglish: 'accessory', value: 'char', propertyLength: '32'})
+  }
+  if (propertyList.value.remarkList.length === 0) {
+    propertyList.value.remarkList.push({propertyEnglish: 'remark', value: 'char', propertyLength: '256'});
+  }
+
+  console.log(propertyList.value);
 }
+
+// 新增field属性
+const addFieldProperty = (item) => {
+  let selectNum = Number(item.propertyEnglish.slice(-1))
+  console.log(selectNum)
+  // 如果当前项已经是9则无法添加
+  if (selectNum === 9) {
+    ElMessage({
+      message: '当前已到添加上限',
+      type: 'warning',
+    })
+    return;
+  }
+  for (let i = 0; i < propertyList.value.fieldList.length; i++) {
+    const item = propertyList.value.fieldList[i];
+    const num = Number(item.propertyEnglish.slice(-1));
+    console.log(num);
+    // 如果下一项已经存在则不可添加
+    if (num === (selectNum + 1)) {
+      console.log('选择的相等了')
+      ElMessage({
+        message: '请勿重复添加',
+        type: 'warning',
+      })
+      return;
+    }
+  }
+  propertyList.value.fieldList.push({propertyEnglish: 'field' + (selectNum + 1), value: 'char'})
+}
+// 增加number
+const addNumber = item => {
+  let selectNum = Number(item.propertyEnglish.slice(-1))
+  console.log('当前选择的尾号', selectNum)
+  // 转换第一个非数字格式
+  selectNum = isNaN(selectNum) ? 0 : selectNum;
+  // 如果当前项已经是5则无法添加
+  if (selectNum === 5) {
+    ElMessage({
+      message: '当前已到添加上限',
+      type: 'warning',
+    })
+    return;
+  }
+  for (let i = 0; i < propertyList.value.numberList.length; i++) {
+    const num = Number(propertyList.value.numberList[i].propertyEnglish.slice(-1))
+    console.log('numberList中的尾号', num)
+    if (num === (selectNum + 1)) {
+      console.log('选择的相等了')
+      ElMessage({
+        message: '请勿重复添加',
+        type: 'warning',
+      })
+      return;
+    }
+  }
+  propertyList.value.numberList.push({propertyEnglish: 'number' + (selectNum + 1), value: 'num'})
+}
+// 添加accessory
+const addAccessory = item => {
+  let selectNum = Number(item.propertyEnglish.slice(-1))
+  console.log('当前选择的尾号', selectNum)
+  // 转换第一个非数字格式
+  selectNum = isNaN(selectNum) ? 0 : selectNum;
+  // 如果当前项已经是5则无法添加
+  if (selectNum === 5) {
+    ElMessage({
+      message: '当前已到添加上限',
+      type: 'warning',
+    })
+    return;
+  }
+  for (let i = 0; i < propertyList.value.accessoryList.length; i++) {
+    const num = Number(propertyList.value.accessoryList[i].propertyEnglish.slice(-1))
+    console.log('numberList中的尾号', num)
+    if (num === (selectNum + 1)) {
+      console.log('选择的相等了')
+      ElMessage({
+        message: '请勿重复添加',
+        type: 'warning',
+      })
+      return;
+    }
+  }
+  propertyList.value.accessoryList.push({propertyEnglish: 'accessory' + (selectNum + 1), value: 'char'})
+}
+// 新增备注
+const addRemark = item => {
+  let selectNum = Number(item.propertyEnglish.slice(-1))
+  console.log('当前选择的尾号', selectNum)
+  // 转换第一个非数字格式
+  selectNum = isNaN(selectNum) ? 0 : selectNum;
+  // 如果当前项已经是2则无法添加
+  if (selectNum === 2) {
+    ElMessage({
+      message: '当前已到添加上限',
+      type: 'warning',
+    })
+    return;
+  }
+  for (let i = 0; i < propertyList.value.remarkList.length; i++) {
+    const num = Number(propertyList.value.remarkList[i].propertyEnglish.slice(-1))
+    console.log('numberList中的尾号', num)
+    if (num === (selectNum + 1)) {
+      console.log('选择的相等了')
+      ElMessage({
+        message: '请勿重复添加',
+        type: 'warning',
+      })
+      return;
+    }
+  }
+  propertyList.value.remarkList.push({propertyEnglish: 'remark' + (selectNum + 1), value: 'char'})
+}
+
+// 提交增加属性信息
+const onSubmit = async () => {
+  // 将propertyList组装成json字符串
+  // console.log(propertyList.value)
+  let requestArr = []
+  for (let key in propertyList.value) {
+    console.log('当前的键值对：', key, propertyList.value[key])
+    propertyList.value[key].forEach(item => {
+      if (item.propertyChinese !== undefined && item.propertyChinese !== '') {
+        // 解构相应对象
+        const {propertyChinese, propertyEnglish, propertyType, propertyLength} = item
+        requestArr.push({propertyChinese, propertyEnglish, propertyType, propertyLength})
+      }
+    })
+  }
+  console.log(requestArr)
+  // 转json，注意js对象转换成json格式必须加上encodeURIComponent方法，否则无法传输
+  const jsonStr = encodeURIComponent(JSON.stringify(requestArr))
+  const requestBody = {
+    company_id: companyId.value,
+    entity_code: selectEntityCode.value,
+    entity_type: selectEntityType.value,
+    property_list: jsonStr
+  }
+  console.log('当前添加条件', requestBody)
+  const res = await company2Api.addCompanyEntityProperty(requestBody)
+  // 若响应码为1则表示添加成功
+  if (res.code === 1) {
+    ElMessage({
+      message: '添加成功',
+      type: 'success',
+    })
+  }
+  console.log(res);
+}
+
+
 const handleDelete = (index, row) => {
   console.log(index, row)
 }
@@ -484,9 +481,17 @@ const handleJump = (index, row) => {
   router.push('/company2')
 }
 
+// 跳转到页面
 const toPage = (index, row) => {
   console.log(index, row)
   router.push('/company3')
+};
+
+// 跳转到事件页面
+const toEvent = (index, row) => {
+  console.log(index, row)
+  console.log('跳转到事件页面')
+  router.push('/company4')
 };
 
 // 表格数据
@@ -520,15 +525,9 @@ const addCompanyEntityClick = async () => {
     code_name: '10',
     entity_type: '11',
     type_name: '12'
-
-    //group_entity_code: entityInfo.value.groupEntityCode,
-    //entity_code:entityInfo.value.entityCode,
-    //code_name:entityInfo.value.codeName,
-    //entity_type:entityInfo.value.entityType,
-    //type_name:entityInfo.value.typeName
   }
-  console.log('requestBody=', requestBody.entity_code);
-
+  const res = await companyApi.addCompanyEntity(requestBody)
+  console.log(res)
 
   // const res = await addCompanyEntity(requestBody)
   // console.log('主体增加返回', res);
@@ -539,15 +538,14 @@ const addCompanyEntityClick = async () => {
 
 // 根据类型查找主体
 const selectTypeFn = (code) => {
-  // 获取之前先清空子实体数组
+  // 获取之前先清空子实体数组和绑定的数据
   entityArr.value = []
+  entityName.value = ''
   // 根据类型名称获取当前主体项中的子主体列表
-  console.log('xpa1')
   console.log(allEntityList.value)
   allEntityList.value.forEach(item => {
-    // console.log(code === item.entityCode)
     if (code === item.groupEntityCode) {
-      if (item.entityType == '') {
+      if (item.entityType === '') {
         entityArr.value.push({
           value: item.entityCode,
           label: item.codeName,
@@ -603,10 +601,6 @@ const form = reactive({
   desc: '',
 })
 
-// 表单提交
-const onSubmit = () => {
-  console.log('submit!')
-}
 
 // 初始化函数
 const init = async () => {
@@ -663,7 +657,10 @@ onMounted(() => {
 .main {
   .left {
     float: left;
-    width: 670px;
+    width: 657px;
+    .el-button+.el-button {
+      margin: 0;
+    }
 
     .companyInfo {
       .in {

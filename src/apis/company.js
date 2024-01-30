@@ -15,9 +15,6 @@ function getCompany(data) {
 function getCompanyEntityProperty(data) {
     let url = '/getCompanyEntityproperty'
     return requestUrl(data, url)
-    /*return http({
-        url: `/getCompanyEntityproperty?company_id=${data.company_id}&entity_code=${data.entity_code}&entity_type=${data.entity_code}`
-    })*/
 }
 
 function addCompanyEntity(data) {
