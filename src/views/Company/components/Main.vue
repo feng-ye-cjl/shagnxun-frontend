@@ -111,7 +111,7 @@
             :key="item.propertyEnglish">
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyChinese"/>
           <el-select
-              v-model="item.value"
+              v-model="item.propertyType"
               placeholder="类型"
               style="width: 100px;margin-right: 10px">
             <el-option
@@ -137,7 +137,7 @@
             :key="item.propertyEnglish">
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyChinese"/>
           <el-select
-              v-model="item.value"
+              v-model="item.propertyType"
               placeholder="类型"
               style="width: 100px;margin-right: 10px">
             <el-option
@@ -162,7 +162,7 @@
             v-for="item in propertyList.numberList"
             :key="item.propertyEnglish">
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyChinese"/>
-          <el-input class="form_item" placeholder="类型" v-model="item.value"/>
+          <el-input class="form_item" placeholder="类型" v-model="item.propertyType"/>
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyLength"/>
           <el-button
               size="small"
@@ -177,7 +177,7 @@
             v-for="item in propertyList.accessoryList"
             :key="item.propertyEnglish">
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyChinese"/>
-          <el-input class="form_item" placeholder="类型" v-model="item.value"/>
+          <el-input class="form_item" placeholder="类型" v-model="item.propertyType"/>
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyLength"/>
           <el-button
               size="small"
@@ -192,7 +192,7 @@
             v-for="item in propertyList.remarkList"
             :key="item.propertyEnglish">
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyChinese"/>
-          <el-input class="form_item" placeholder="类型" v-model="item.value"/>
+          <el-input class="form_item" placeholder="类型" v-model="item.propertyType"/>
           <el-input class="form_item" placeholder="长度" value="256"/>
           <el-button
               size="small"
@@ -279,7 +279,6 @@ const queryProperty = async (index, row) => {
   // console.log(requestBody)
   const res = await companyApi.getCompanyEntityProperty(requestBody)
   res.forEach(item => {
-    item.value = ''
     if (item.propertyEnglish.charAt(0) === 'f') {
       propertyList.value.fieldList.push(item)
     } else if (item.propertyEnglish.charAt(0) === 'n') {

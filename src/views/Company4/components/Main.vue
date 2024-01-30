@@ -230,7 +230,7 @@
             :key="item.propertyEnglish">
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyChinese"/>
           <el-select
-              v-model="item.value"
+              v-model="item.propertyType"
               placeholder="类型"
               style="width: 100px;margin-right: 10px">
             <el-option
@@ -256,7 +256,7 @@
             :key="item.propertyEnglish">
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyChinese"/>
           <el-select
-              v-model="item.value"
+              v-model="item.propertyType"
               placeholder="类型"
               style="width: 100px;margin-right: 10px">
             <el-option
@@ -287,7 +287,7 @@
             v-for="item in propertyList.numberList"
             :key="item.propertyEnglish">
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyChinese"/>
-          <el-input class="form_item" placeholder="类型" v-model="item.value"/>
+          <el-input class="form_item" placeholder="类型" v-model="item.propertyType"/>
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyLength"/>
           <el-button
               size="small"
@@ -302,7 +302,7 @@
             v-for="item in propertyList.accessoryList"
             :key="item.propertyEnglish">
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyChinese"/>
-          <el-input class="form_item" placeholder="类型" v-model="item.value"/>
+          <el-input class="form_item" placeholder="类型" v-model="item.propertyType"/>
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyLength"/>
           <el-button
               size="small"
@@ -323,7 +323,7 @@
             v-for="item in propertyList.remarkList"
             :key="item.propertyEnglish">
           <el-input class="form_item" placeholder="请输入" v-model="item.propertyChinese"/>
-          <el-input class="form_item" placeholder="类型" v-model="item.value"/>
+          <el-input class="form_item" placeholder="类型" v-model="item.propertyType"/>
           <el-input class="form_item" placeholder="长度" value="256"/>
           <el-button
               size="small"
@@ -377,6 +377,17 @@ const entityCode2 = ref('')
 // 当前子主体名称
 const entityChildName = ref('')
 const entityChildName2 = ref('')
+// 数据类型下拉框
+const propertyTypeList = ref([
+  {
+    value: 'char',
+    label: 'char'
+  },
+  {
+    value: 'char0',
+    label: 'char0'
+  }
+])
 
 // 主体信息
 const entityInfo = ref({})
@@ -446,7 +457,7 @@ const queryProperty = async (index, row) => {
   // 保存当前requestBody到pinia
   companyStore.setToListBody(requestBody)
 
-  console.log('当前角色和类型',roleName.value,typeName.value)
+  console.log('当前角色和类型', roleName.value, typeName.value)
   if (roleName.value === '' || typeName.value === '') {
     ElMessage({
       message: '选择角色和类型',
@@ -462,7 +473,8 @@ const queryProperty = async (index, row) => {
   selectObjectCode.value = res[0].objectCode
   // const res = null
   res.forEach(item => {
-    item.value = ''
+    // item.value = ''
+    console.log(item)
     if (item.propertyEnglish.charAt(0) === 'f') {
       propertyList.value.fieldList.push(item)
     } else if (item.propertyEnglish.charAt(0) === 'n') {
@@ -672,7 +684,7 @@ const onSubmit = async () => {
   // console.log(propertyList.value)
   let requestArr = []
   for (let key in propertyList.value) {
-    console.log('当前的键值对：', key, propertyList.value[key])
+    // console.log('当前的键值对：', key, propertyList.value[key])
     propertyList.value[key].forEach(item => {
       if (item.propertyChinese !== undefined && item.propertyChinese !== '') {
         // 解构相应对象
