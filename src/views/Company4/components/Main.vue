@@ -73,18 +73,18 @@
           />
         </el-select>
         <!--属性-->
-        <el-select
-            v-model="propertyName"
-            placeholder="属性"
-            style="width: 150px;margin-right: 50px">
-          <el-option
-              v-for="(item,index) in propertyList"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-              @click="selectProperty(item.value,index)"
-          />
-        </el-select>
+        <!--        <el-select
+                    v-model="propertyName"
+                    placeholder="属性"
+                    style="width: 150px;margin-right: 50px">
+                  <el-option
+                      v-for="(item,index) in propertyList"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                      @click="selectProperty(item.value,index)"
+                  />
+                </el-select>-->
       </div>
       <!--   公司信息输入框   -->
       <div class="companyInfo">
@@ -138,18 +138,18 @@
           />
         </el-select>
         <!--属性-->
-        <el-select
-            v-model="propertyName2"
-            placeholder="属性2"
-            style="width: 150px;margin-right: 50px">
-          <el-option
-              v-for="(item,index) in propertyList2"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-              @click="selectProperty2(item.value,index)"
-          />
-        </el-select>
+        <!--        <el-select
+                    v-model="propertyName2"
+                    placeholder="属性2"
+                    style="width: 150px;margin-right: 50px">
+                  <el-option
+                      v-for="(item,index) in propertyList2"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                      @click="selectProperty2(item.value,index)"
+                  />
+                </el-select>-->
       </div>
       <!--   公司信息输入框2   -->
       <div class="companyInfo">
@@ -395,8 +395,6 @@ const entityInfo = ref({})
 const entityInfo2 = ref({})
 // 事件名称
 const eventName = ref('')
-// 当前属性名称
-const propertyName = ref('')
 // 属性列表
 const propertyList = ref([])
 const propertyList2 = ref([])
@@ -454,8 +452,14 @@ const queryProperty = async (index, row) => {
     role_type: roleName.value,
     type: typeName.value,
   }
-  // 保存当前requestBody到pinia
-  companyStore.setToListBody(requestBody)
+  // 保存当前requestBody以及主体信息保存到pinia
+  companyStore.setToListBody({
+    ...requestBody,
+    code_name: entityInfo.value.codeName,
+    type_name: entityInfo.value.typeName,
+    event_name: entityInfo.value.eventName,
+    role_name: roleName.value === '04' ? '管理员' : '工人'
+  })
 
   console.log('当前角色和类型', roleName.value, typeName.value)
   if (roleName.value === '' || typeName.value === '') {
@@ -619,10 +623,18 @@ const addRemark = item => {
 // 跳转页面
 const toList = (item) => {
   // 填充参数到pinia然后跳转
-  // todo 填充参数到pinia
   console.log(item)
+  const {propertyChinese, propertyEnglish} = item
+  // 填充参数到pinia
+  companyStore.setToListBody(
+      {
+        ...companyStore.toListBody,
+        propertyChinese,
+        propertyEnglish
+      }
+  )
   // 跳转路由
-  // router.push('/company5')
+  router.push('/company5')
 }
 
 // 选择类型
@@ -738,7 +750,7 @@ const selectFn = (code, index) => {
   console.log(allEntityList.value)
   allEntityList.value.forEach(item => {
     // console.log(code === item.entityCode)
-    if (code === item.entityCode) {
+    if (code === item.entityCode && item.entityType !== '') {
       entityChildArr.value.push({
         value: item.entityType,
         label: item.typeName,
@@ -846,29 +858,12 @@ const selectEvent2 = (code, index) => {
   entityInfo2.value.eventName = eventList2.value[index].label
 }
 
-// 选择一个属性
-const selectProperty = (code, index) => {
-  console.log('index', index)
-  console.log('属性列表', propertyList.value)
-  // console.log(propertyList.value[index])
-  // 渲染输入框
-  entityInfo.value.propertyCode = propertyList.value[index].value
-  entityInfo.value.propertyName = propertyList.value[index].label
-}
-
-const selectProperty2 = (code2, index) => {
-  console.log('index', index)
-  console.log('属性列表', propertyList2.value)
-  // console.log(propertyList.value[index])
-  // 渲染输入框
-  entityInfo2.value.propertyCode = propertyList2.value[index].value
-  entityInfo2.value.propertyName = propertyList2.value[index].label
-}
 
 // 获取角色列表
 const getRouter = async () => {
-  // 先清空对
+  // 先清空列表
   tableList.value = []
+  roleArr.value = []
   // 获取角色
   const roleRes = await company2Api.getCompanyRole({company_id: companyId.value})
   roleRes.forEach(item => {
@@ -878,12 +873,19 @@ const getRouter = async () => {
     })
   })
   // 构造请求对象
+  console.log('当前主体代码类型',entityInfo.value.entityCode === undefined)
   const requestBody = {
     company_id: companyId.value,
-    entity_code: entityInfo.value.entityCode,
-    entity_type: entityInfo.value.entityType,
+    entity_code: entityInfo.value.entityCode === undefined ? '' : entityInfo.value.entityCode,
+    entity_type: entityInfo.value.entityType === undefined ? '' : entityInfo.value.entityType,
     scene_code_type: '104'
   }
+  // const requestBody = {
+  //   company_id: '50032',
+  //   entity_code: '',
+  //   entity_type: '',
+  //   scene_code_type: '104'
+  // }
   const res = await company2Api.getEntityPageRouter(requestBody)
   // 保存表格数据
   router2List.value = res
@@ -905,14 +907,16 @@ const getRouter = async () => {
     company_id: companyId.value,
     group_entity_code: '000'
   }
-  const res2 = await companyApi.getCompany(body)
+  const res2 = await companyApi.getCompany0(body)
   allEntityList.value = res2
   res2.forEach(item => {
-    entityArr.value.push({
-      value: item.entityCode,
-      label: item.codeName,
-      childArr: []
-    })
+    if (item.entityType === '') {
+      entityArr.value.push({
+        value: item.entityCode,
+        label: item.codeName,
+        childArr: []
+      })
+    }
   })
   for (let i = 0; i < entityArr.value.length; i++) {
     for (let j = i + 1; j < entityArr.value.length; j++) {
@@ -974,10 +978,10 @@ const init = async () => {
   console.log('来自页面1的参数', companyStore.companyInfo)
   // 绑定数据
   companyId.value = companyStore.companyInfo.companyId
-  entityInfo.value.entityCode = companyStore.companyInfo.entityCode
-  entityInfo.value.codeName = companyStore.companyInfo.entityName
-  entityInfo.value.entityType = companyStore.companyInfo.childEntityCode
-  entityInfo.value.typeName = companyStore.companyInfo.childEntityName
+  // entityInfo.value.entityCode = companyStore.companyInfo.entityCode
+  // entityInfo.value.codeName = companyStore.companyInfo.entityName
+  // entityInfo.value.entityType = companyStore.companyInfo.childEntityCode
+  // entityInfo.value.typeName = companyStore.companyInfo.childEntityName
 }
 
 // onMounted内部必须是一个箭头函数，内部函数体为一个需要执行的方法

@@ -1,13 +1,11 @@
 import http from '@/utils/http'
 
-/*export function getCompany (data) {
-    return http({
-        url: `/getCompanyEntitycode?company_id=${data.company_id}&group_entity_code=${data.group_entity_code}`
-    })
-}*/
+function getCompany0(data) {
+    let url = '/getCompanyEntitycode0'
+    return requestUrl(data, url)
+}
 
 function getCompany(data) {
-
     let url = '/getCompanyEntitycode'
     return requestUrl(data, url)
 }
@@ -24,6 +22,7 @@ function addCompanyEntity(data) {
 
 
 const companyApi = {
+    getCompany0,
     getCompany,
     getCompanyEntityProperty,
     addCompanyEntity

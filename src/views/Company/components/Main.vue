@@ -70,33 +70,49 @@
             操作
           </template>
           <template #default="scope">
-            <el-button size="small" type="info" @click="queryProperty(scope.$index, scope.row)">
-              属性
-            </el-button>
-            <el-button
-                size="small"
-                type="danger"
-                @click="handleDelete(scope.$index, scope.row)">
-              删除
-            </el-button>
-            <el-button
-                size="small"
-                type="primary"
-                @click="handleJump(scope.$index, scope.row)">
-              消息
-            </el-button>
-            <el-button
-                size="small"
-                type="primary"
-                @click="toPage(scope.$index, scope.row)">
-              页面
-            </el-button>
-            <el-button
-                size="small"
-                type="primary"
-                @click="toEvent(scope.$index, scope.row)">
-              事件
-            </el-button>
+            <!--按钮改成复选框-->
+            <el-select
+                v-model="entityList[scope.$index].selectOption"
+                placeholder="操作"
+                style="width: 100px;margin-right: 30px">
+              <el-option
+                  v-for="(item) in optionList"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                  @click="selectOption(item,scope.$index, scope.row)"
+              />
+            </el-select>
+            <!--            <el-button
+                            size="small"
+                            type="info"
+                            @click="queryProperty(scope.$index, scope.row)">
+                          属性
+                        </el-button>
+                        <el-button
+                            size="small"
+                            type="danger"
+                            @click="handleDelete(scope.$index, scope.row)">
+                          删除
+                        </el-button>
+                        <el-button
+                            size="small"
+                            type="primary"
+                            @click="handleJump(scope.$index, scope.row)">
+                          消息
+                        </el-button>
+                        <el-button
+                            size="small"
+                            type="primary"
+                            @click="toPage(scope.$index, scope.row)">
+                          页面
+                        </el-button>
+                        <el-button
+                            size="small"
+                            type="primary"
+                            @click="toEvent(scope.$index, scope.row)">
+                          事件
+                        </el-button>-->
           </template>
         </el-table-column>
       </el-table>
@@ -104,6 +120,12 @@
     <div class="right">
       <!--   表单   -->
       <el-form :model="form">
+        <div v-show="selectEntityInfo.isShow">
+          <el-text class="mx-1" size="large">
+            当前主体信息：{{ selectEntityInfo.entityCode }}---{{ selectEntityInfo.codeName }}
+            {{ selectEntityInfo.entityType }}---{{ selectEntityInfo.typeName }}
+          </el-text>
+        </div>
         <!--    其他    -->
         <el-form-item
             :label="item.propertyEnglish"
@@ -257,56 +279,6 @@ const propertyTypeList = ref([
 const selectEntityCode = ref('')
 const selectEntityType = ref('')
 
-// 查询属性
-const queryProperty = async (index, row) => {
-  console.log('当前行属性条件', index, row)
-  // 保存当前entityCode和entityType
-  selectEntityCode.value = row.entityCode
-  selectEntityType.value = row.entityType
-  // 先清空属性列表
-  propertyList.value = {
-    otherList: [],
-    fieldList: [],
-    numberList: [],
-    accessoryList: [],
-    remarkList: []
-  }
-  const requestBody = {
-    company_id: companyId.value,
-    entity_code: row.entityCode,
-    entity_type: row.entityType
-  }
-  // console.log(requestBody)
-  const res = await companyApi.getCompanyEntityProperty(requestBody)
-  res.forEach(item => {
-    if (item.propertyEnglish.charAt(0) === 'f') {
-      propertyList.value.fieldList.push(item)
-    } else if (item.propertyEnglish.charAt(0) === 'n') {
-      propertyList.value.numberList.push(item)
-    } else if (item.propertyEnglish.charAt(0) === 'a') {
-      propertyList.value.accessoryList.push(item)
-    } else if (item.propertyEnglish.charAt(0) === 'r') {
-      propertyList.value.remarkList.push(item);
-    } else {
-      propertyList.value.otherList.push(item);
-    }
-  })
-  // 如果其中一个数组为空则默认填充一条记录
-  if (propertyList.value.fieldList.length === 0) {
-    propertyList.value.fieldList.push({propertyEnglish: 'field0', value: 'char', propertyLength: '32'});
-  }
-  if (propertyList.value.numberList.length === 0) {
-    propertyList.value.numberList.push({propertyEnglish: 'number0', value: 'num', propertyLength: '32'})
-  }
-  if (propertyList.value.accessoryList.length === 0) {
-    propertyList.value.accessoryList.push({propertyEnglish: 'accessory', value: 'char', propertyLength: '32'})
-  }
-  if (propertyList.value.remarkList.length === 0) {
-    propertyList.value.remarkList.push({propertyEnglish: 'remark', value: 'char', propertyLength: '256'});
-  }
-
-  console.log(propertyList.value);
-}
 
 // 新增field属性
 const addFieldProperty = (item) => {
@@ -456,8 +428,108 @@ const onSubmit = async () => {
   }
   console.log(res);
 }
+// 操作列表
+const optionList = ref([
+  {
+    value: '01',
+    label: '属性'
+  },
+  {
+    value: '02',
+    label: '删除'
+  },
+  {
+    value: '03',
+    label: '消息'
+  },
+  {
+    value: '04',
+    label: '页面'
+  },
+  {
+    value: '05',
+    label: '事件'
+  }
+])
+// 当前选中的主体信息
+const selectEntityInfo = ref({isShow: false})
+// 操作下拉框函数
+const selectOption = (item, index, row) => {
+  // 根据index判断当前是什么操作
+  if (item.value === '01') {
+    console.log('属性')
+    queryProperty(index, row)
+  } else if (item.value === '02') {
+    console.log('删除')
+    handleDelete(index, row)
+  } else if (item.value === '03') {
+    console.log('消息')
+    handleJump(index, row)
+  } else if (item.value === '04') {
+    console.log('页面')
+    toPage(index, row)
+  } else {
+    console.log('事件')
+    toEvent(index, row)
+  }
+  // 给当前主体信息赋值
+  selectEntityInfo.value = entityList.value[index]
+  selectEntityInfo.value.isShow = true
+}
+
+// 查询属性
+const queryProperty = async (index, row) => {
+  console.log('当前行属性条件', index, row)
+  // 保存当前entityCode和entityType
+  selectEntityCode.value = row.entityCode
+  selectEntityType.value = row.entityType
+  // 先清空属性列表
+  propertyList.value = {
+    otherList: [],
+    fieldList: [],
+    numberList: [],
+    accessoryList: [],
+    remarkList: []
+  }
+  const requestBody = {
+    company_id: companyId.value,
+    entity_code: row.entityCode,
+    entity_type: row.entityType
+  }
+  // console.log(requestBody)
+  const res = await companyApi.getCompanyEntityProperty(requestBody)
+  res.forEach(item => {
+    if (item.propertyEnglish.charAt(0) === 'f') {
+      propertyList.value.fieldList.push(item)
+    } else if (item.propertyEnglish.charAt(0) === 'n') {
+      propertyList.value.numberList.push(item)
+    } else if (item.propertyEnglish.charAt(0) === 'a') {
+      propertyList.value.accessoryList.push(item)
+    } else if (item.propertyEnglish.charAt(0) === 'r') {
+      propertyList.value.remarkList.push(item);
+    } else {
+      propertyList.value.otherList.push(item);
+    }
+  })
+  // 如果其中一个数组为空则默认填充一条记录
+  if (propertyList.value.fieldList.length === 0) {
+    propertyList.value.fieldList.push({propertyEnglish: 'field0', value: 'char', propertyLength: '32'});
+  }
+  if (propertyList.value.numberList.length === 0) {
+    propertyList.value.numberList.push({propertyEnglish: 'number0', value: 'num', propertyLength: '32'})
+  }
+  if (propertyList.value.accessoryList.length === 0) {
+    propertyList.value.accessoryList.push({propertyEnglish: 'accessory', value: 'char', propertyLength: '32'})
+  }
+  if (propertyList.value.remarkList.length === 0) {
+    propertyList.value.remarkList.push({propertyEnglish: 'remark', value: 'char', propertyLength: '256'});
+  }
+
+  console.log(propertyList.value);
+}
 
 
+// 删除按钮
 const handleDelete = (index, row) => {
   console.log(index, row)
 }
@@ -473,7 +545,7 @@ const handleJump = (index, row) => {
     childEntityName: row.typeName
   }
   console.log(companyInfo)
-  // 将数据存如pinia
+  // 将数据存入pinia
   companyStore.setCompanyInfo(companyInfo)
   console.log(companyStore.companyInfo)
   // 路由跳转
@@ -483,13 +555,16 @@ const handleJump = (index, row) => {
 // 跳转到页面
 const toPage = (index, row) => {
   console.log(index, row)
+  // 将公司数据存入pinia
+  companyStore.setCompanyInfo({companyId: companyId.value})
   router.push('/company3')
 };
 
 // 跳转到事件页面
 const toEvent = (index, row) => {
   console.log(index, row)
-  console.log('跳转到事件页面')
+  // 将公司数据存入pinia
+  companyStore.setCompanyInfo({companyId: companyId.value})
   router.push('/company4')
 };
 
@@ -508,8 +583,11 @@ const getCompanyEntity = async () => {
   }
   const res = await companyApi.getCompany(requestBody)
   console.log(res)
-  // entityList.value = res.filter(item => item.code === Number(companyId.value));
   entityList.value = res
+  // 事件列表中每一项加上当前选择的操作名称
+  entityList.value.forEach(item => {
+    item.selectOption = ''
+  });
 }
 
 
@@ -519,11 +597,11 @@ const addCompanyEntityClick = async () => {
   console.log('addCompanyEntity entityInfo', entityInfo);
   const requestBody = {
     company_id: companyId.value,
-    group_entity_code: '08',
-    entity_code: '09',
-    code_name: '10',
-    entity_type: '11',
-    type_name: '12'
+    group_entity_code: entityInfo.value.groupEntityCode,
+    entity_code: entityInfo.value.entityCode,
+    code_name: entityInfo.value.codeName,
+    entity_type: entityInfo.value.entityType,
+    type_name: entityInfo.value.typeName
   }
   const res = await companyApi.addCompanyEntity(requestBody)
   console.log(res)
@@ -541,7 +619,8 @@ const selectTypeFn = (code) => {
   entityArr.value = []
   entityName.value = ''
   // 根据类型名称获取当前主体项中的子主体列表
-  console.log(allEntityList.value)
+  console.log('所有主体列表', allEntityList.value)
+  console.log('主体code', code)
   allEntityList.value.forEach(item => {
     if (code === item.groupEntityCode) {
       if (item.entityType === '') {
@@ -552,7 +631,7 @@ const selectTypeFn = (code) => {
       }
     }
   })
-  console.log(entityArr);
+  console.log('主体列表', entityArr.value);
 }
 
 // 根据主体查找子主体
@@ -562,7 +641,6 @@ const selectFn = (code) => {
   // 根据主体名称获取当前主体项中的子主体列表
   console.log(allEntityList.value)
   allEntityList.value.forEach(item => {
-    // console.log(code === item.entityCode)
     if (code === item.entityCode) {
       entityChildArr.value.push({
         value: item.entityType,
@@ -604,8 +682,9 @@ const form = reactive({
 // 初始化函数
 const init = async () => {
   const requestBody = {
-    company_id: '00000',
-    group_entity_code: '000'
+    company_id: "00000",
+    group_entity_code: "000",
+    entity_type: ""
   }
   typeArr.value.push({
     value: '01',
@@ -620,19 +699,19 @@ const init = async () => {
   typeArr.value.push({
     value: '03',
     label: '办公',
-
   })
 
-
   // 使用封装的请求方法
-  const res = await companyApi.getCompany(requestBody)
+  const res = await companyApi.getCompany0(requestBody)
   allEntityList.value = res
   res.forEach(item => {
-    entityArr.value.push({
-      value: item.entityCode,
-      label: item.codeName,
-      childArr: []
-    })
+    if (item.entityType === '') {
+      entityArr.value.push({
+        value: item.entityCode,
+        label: item.codeName,
+        childArr: []
+      })
+    }
   })
   for (let i = 0; i < entityArr.value.length; i++) {
     for (let j = i + 1; j < entityArr.value.length; j++) {
@@ -657,7 +736,8 @@ onMounted(() => {
   .left {
     float: left;
     width: 657px;
-    .el-button+.el-button {
+
+    .el-button + .el-button {
       margin: 0;
     }
 

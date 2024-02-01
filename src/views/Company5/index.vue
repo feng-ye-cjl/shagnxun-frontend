@@ -1,7 +1,7 @@
 <template>
   <div class="common-layout">
     <el-container class="container">
-      <el-header>商讯科技消息</el-header>
+      <el-header>商讯科技list</el-header>
       <el-container>
         <el-main>
           <Main/>

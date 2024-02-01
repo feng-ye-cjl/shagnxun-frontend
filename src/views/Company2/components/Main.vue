@@ -278,7 +278,7 @@ const handleProperty = async (index, row) => {
     entity_type2: row.entityType2,
     event_code2: row.eventCode2,
     subscribe_scene_code: row.subscribeSceneCode
-    /*Company_id : "50031",
+    /*company_id : "50031",
     entity_code : "303",
     entity_type : "32",
     event_code : "604",
@@ -315,8 +315,7 @@ const selectFn = (code, index) => {
   // 根据主体名称获取当前主体项中的子主体列表
   console.log(allEntityList.value)
   allEntityList.value.forEach(item => {
-    // console.log(code === item.entityCode)
-    if (code === item.entityCode) {
+    if (code === item.entityCode && item.entityType !== '') {
       entityChildArr.value.push({
         value: item.entityType,
         label: item.typeName,
@@ -337,7 +336,7 @@ const selectFn2 = (code, index) => {
   console.log(allEntityList.value)
   allEntityList.value.forEach(item => {
     // console.log(code === item.entityCode)
-    if (code === item.entityCode) {
+    if (code === item.entityCode && item.entityType !== '') {
       entityChildArr2.value.push({
         value: item.entityType,
         label: item.typeName,
@@ -353,10 +352,13 @@ const selectFn2 = (code, index) => {
 
 // 获取事件列表和属性列表函数
 const childEntityClick = async (code, index) => {
+  // 清空事件属性列表
+  eventList.value = []
+  propertyList.value = []
   console.log(code)
   // 定义事件列表请求体
   const requestBody = {
-    Company_id: companyId.value,
+    company_id: companyId.value,
     entity_code: entityCode.value,
     entity_type: code
   }
@@ -381,15 +383,17 @@ const childEntityClick = async (code, index) => {
 }
 
 const childEntityClick2 = async (code2, index) => {
+  propertyList2.value = []
+  eventList2.value = []
   console.log(code2)
   // 定义事件列表请求体
   const requestBody2 = {
-    /*Company_id: companyId.value,
+    company_id: companyId.value,
     entity_code: entityCode2.value,
-    entity_type: code2*/
-    company_id: '50031',
-    entity_code: '303',
-    entity_type: '32'
+    entity_type: code2
+    // company_id: '50031',
+    // entity_code: '303',
+    // entity_type: '32'
 
   }
   // 调用远程方法获取事件列表
@@ -445,10 +449,12 @@ const getRouter = async () => {
   // 先清空对
   tableList.value = []
   // 构造请求对象
+  console.log(entityInfo.value.entityCode === '')
+  console.log(entityInfo.value.entityType === '')
   const requestBody = {
     company_id: companyId.value,
-    entity_code: entityInfo.value.entityCode,
-    entity_type: entityInfo.value.entityType
+    entity_code: entityInfo.value.entityCode === '' ? '' : entityInfo.value.entityCode,
+    entity_type: entityInfo.value.entityType === '' ? '' : entityInfo.value.entityType
     // company_id: '50031',
     // entity_code: '303',
     // entity_type: '32'
@@ -505,14 +511,16 @@ const init = async () => {
     company_id: companyId.value,
     group_entity_code: '000'
   }
-  const res = await companyApi.getCompany(requestBody)
+  const res = await companyApi.getCompany0(requestBody)
   allEntityList.value = res
   res.forEach(item => {
-    entityArr.value.push({
-      value: item.entityCode,
-      label: item.codeName,
-      childArr: []
-    })
+    if (item.entityType === '') {
+      entityArr.value.push({
+        value: item.entityCode,
+        label: item.codeName,
+        childArr: []
+      })
+    }
   })
   for (let i = 0; i < entityArr.value.length; i++) {
     for (let j = i + 1; j < entityArr.value.length; j++) {

@@ -229,7 +229,7 @@
   </div>
 </template>
 <script setup>
-import {ref, onMounted} from 'vue'
+import {ref, onMounted, watchEffect} from 'vue'
 import company2Api from "@/apis/company2.js";
 import {useCompanyStore} from "@/stores/company.js";
 import companyApi from "@/apis/company.js";
@@ -312,9 +312,10 @@ const selectRole = (value, index) => {
 const handleProperty = async (index, row) => {
   propertyTable.value = []
   console.log('当前行数据', row)
+  console.log('当前entityInfo',entityInfo.value)
   // 回显到输入框
   entityInfo.value.entityCode = row.entityCode
-  entityInfo.value.codeName = row.entityName
+  entityInfo.value.codeName = row.codeName
   entityInfo.value.entityType = row.entityType
   entityInfo.value.typeName = row.typeName
   entityInfo.value.eventCode = row.eventCode
@@ -366,7 +367,7 @@ const selectFn = (code, index) => {
   console.log(allEntityList.value)
   allEntityList.value.forEach(item => {
     // console.log(code === item.entityCode)
-    if (code === item.entityCode) {
+    if (code === item.entityCode && item.entityType !== '') {
       entityChildArr.value.push({
         value: item.entityType,
         label: item.typeName,
@@ -386,8 +387,7 @@ const selectFn2 = (code, index) => {
   // 根据主体名称获取当前主体项中的子主体列表
   console.log(allEntityList.value)
   allEntityList.value.forEach(item => {
-    // console.log(code === item.entityCode)
-    if (code === item.entityCode) {
+    if (code === item.entityCode && item.entityType !== '') {
       entityChildArr2.value.push({
         value: item.entityType,
         label: item.typeName,
@@ -403,15 +403,15 @@ const selectFn2 = (code, index) => {
 
 // 获取事件列表函数
 const childEntityClick = async (code, index) => {
+  // 先清空列表
+  eventList.value = []
+  propertyList.value = []
   console.log(code)
   // 定义事件列表请求体
   const requestBody = {
-    /*Company_id: companyId.value,
+    company_id: companyId.value,
     entity_code: entityCode.value,
-    entity_type: code*/
-    company_id: '50031',
-    entity_code: '303',
-    entity_type: '32'
+    entity_type: code
   }
   // 调用远程方法获取事件列表
   const res = await company2Api.getCompanyEntityEvent(requestBody)
@@ -433,15 +433,17 @@ const childEntityClick = async (code, index) => {
 }
 
 const childEntityClick2 = async (code2, index) => {
+  eventList2.value = []
+  propertyList2.value = []
   console.log(code2)
   // 定义事件列表请求体
   const requestBody2 = {
-    /*Company_id: companyId.value,
+    company_id: companyId.value,
     entity_code: entityCode2.value,
-    entity_type: code2*/
-    company_id: '50031',
-    entity_code: '303',
-    entity_type: '32'
+    entity_type: code2
+    // company_id: '50031',
+    // entity_code: '303',
+    // entity_type: '32'
 
   }
   // 调用远程方法获取事件列表
@@ -507,9 +509,12 @@ const getRouter = async () => {
   })
   // 构造请求对象
   const requestBody = {
-    company_id: companyId.value,
+    /*company_id: companyId.value,
     entity_code: entityInfo.value.entityCode,
-    entity_type: entityInfo.value.entityType
+    entity_type: entityInfo.value.entityType*/
+    company_id: companyId.value,
+    entity_code: '',
+    entity_type: ''
   }
   const res = await company2Api.getEntityPageRouter(requestBody)
   // 保存表格数据
@@ -521,8 +526,8 @@ const getRouter = async () => {
       codeName: item.codeName,
       entityType: item.entityType,
       typeName: item.typeName,
-      eventCode: item.objectCodeType,
-      eventName: item.objectCodeName,
+      eventCode: item.eventCode,
+      eventName: item.eventName,
       sceneCodeName: item.sceneCodeName,
       sceneCodeType: item.sceneCodeType,
     })
@@ -555,8 +560,8 @@ const getRouter = async () => {
 const addRouter = async () => {
   console.log('实体信息1', entityInfo.value)
   console.log('实体信息2', entityInfo2.value)
-  console.log('角色列表',roleArr.value)
-  console.log('角色列表项',roleArr.value[roleIndex.value])
+  console.log('角色列表', roleArr.value)
+  console.log('角色列表项', roleArr.value[roleIndex.value])
   // 构造请求条件
   const requestBody = {
     company_id: companyId.value,
@@ -600,27 +605,29 @@ const init = async () => {
 
   // 获取主体子主体列表
   // 使用封装的请求方法
-  // const requestBody = {
-  //   company_id: companyId.value,
-  //   group_entity_code: '000'
-  // }
-  // const res = await companyApi.getCompany(requestBody)
-  // allEntityList.value = res
-  // res.forEach(item => {
-  //   entityArr.value.push({
-  //     value: item.entityCode,
-  //     label: item.codeName,
-  //     childArr: []
-  //   })
-  // })
-  // for (let i = 0; i < entityArr.value.length; i++) {
-  //   for (let j = i + 1; j < entityArr.value.length; j++) {
-  //     if (entityArr.value[i].value === entityArr.value[j].value) {
-  //       entityArr.value.splice(j, 1)
-  //     }
-  //   }
-  // }
-  // console.log(allEntityList.value)
+  const requestBody = {
+    company_id: companyId.value,
+    group_entity_code: '000'
+  }
+  const res = await companyApi.getCompany0(requestBody)
+  allEntityList.value = res
+  res.forEach(item => {
+    if (item.entityType === '') {
+      entityArr.value.push({
+        value: item.entityCode,
+        label: item.codeName,
+        childArr: []
+      })
+    }
+  })
+  for (let i = 0; i < entityArr.value.length; i++) {
+    for (let j = i + 1; j < entityArr.value.length; j++) {
+      if (entityArr.value[i].value === entityArr.value[j].value) {
+        entityArr.value.splice(j, 1)
+      }
+    }
+  }
+  console.log(allEntityList.value)
 }
 
 // onMounted内部必须是一个箭头函数，内部函数体为一个需要执行的方法

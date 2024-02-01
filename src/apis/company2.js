@@ -89,6 +89,16 @@ function addCompanyEventProperty(data) {
     return requestUrl(data, '/addCompanyEventproperty')
 }
 
+/**
+ * 添加事件list接口
+ * @param data
+ * @returns {*}
+ */
+function addEntityListRouter(data) {
+    return requestUrl(data, '/addEntityLIstRouter')
+}
+
+
 
 
 // 接口总体对象
@@ -107,7 +117,8 @@ const company2Api = {
     BusEntityEventServlet,
     BusEntityEventServlet2,
     getCompanyEventProperty,
-    addCompanyEventProperty
+    addCompanyEventProperty,
+    addEntityListRouter
 }
 
 export default company2Api
