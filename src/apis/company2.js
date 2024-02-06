@@ -98,8 +98,14 @@ function addEntityListRouter(data) {
     return requestUrl(data, '/addEntityLIstRouter')
 }
 
-
-
+/**
+ * 新增实体接口
+ * @param data
+ * @returns {*}
+ */
+function addEntityTable(data) {
+    return requestUrl(data, '/addEntityTable')
+}
 
 // 接口总体对象
 const company2Api = {
@@ -118,7 +124,8 @@ const company2Api = {
     BusEntityEventServlet2,
     getCompanyEventProperty,
     addCompanyEventProperty,
-    addEntityListRouter
+    addEntityListRouter,
+    addEntityTable
 }
 
 export default company2Api

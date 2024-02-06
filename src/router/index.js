@@ -4,6 +4,7 @@ import Company2 from '@/views/Company2/index.vue'
 import Company3 from '@/views/Company3/index.vue'
 import Company4 from '@/views/Company4/index.vue'
 import Company5 from '@/views/Company5/index.vue'
+import Company6 from '@/views/Company6/index.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,6 +33,11 @@ const router = createRouter({
       path: '/company5',
       name:'跳转',
       component: Company5
+    },
+    {
+      path: '/company6',
+      name:'跳转',
+      component: Company6
     }
   ]
 })

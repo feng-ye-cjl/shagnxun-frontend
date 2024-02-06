@@ -83,36 +83,6 @@
                   @click="selectOption(item,scope.$index, scope.row)"
               />
             </el-select>
-            <!--            <el-button
-                            size="small"
-                            type="info"
-                            @click="queryProperty(scope.$index, scope.row)">
-                          属性
-                        </el-button>
-                        <el-button
-                            size="small"
-                            type="danger"
-                            @click="handleDelete(scope.$index, scope.row)">
-                          删除
-                        </el-button>
-                        <el-button
-                            size="small"
-                            type="primary"
-                            @click="handleJump(scope.$index, scope.row)">
-                          消息
-                        </el-button>
-                        <el-button
-                            size="small"
-                            type="primary"
-                            @click="toPage(scope.$index, scope.row)">
-                          页面
-                        </el-button>
-                        <el-button
-                            size="small"
-                            type="primary"
-                            @click="toEvent(scope.$index, scope.row)">
-                          事件
-                        </el-button>-->
           </template>
         </el-table-column>
       </el-table>
@@ -191,6 +161,12 @@
               type="success"
               @click="addNumber(item)">
             增加
+          </el-button>
+          <el-button
+              size="small"
+              type="info"
+              @click="toCompany(item)">
+            公式
           </el-button>
         </el-form-item>
         <!--access-->
@@ -278,6 +254,19 @@ const propertyTypeList = ref([
 // 当前选中的作为属性查询的entityCode和entityType
 const selectEntityCode = ref('')
 const selectEntityType = ref('')
+
+// 跳转到公司页面
+const toCompany = item => {
+  console.log(item)
+  // 设置当前属性到pinia
+  companyStore.setCompanyInfo({
+    ...companyStore.companyInfo,
+    propertyChinese: item.propertyChinese,
+    propertyEnglish: item.propertyEnglish,
+  })
+  // // 路由跳转
+  router.push('company6')
+};
 
 
 // 新增field属性
@@ -480,6 +469,14 @@ const selectOption = (item, index, row) => {
 // 查询属性
 const queryProperty = async (index, row) => {
   console.log('当前行属性条件', index, row)
+  // 保存信息到pinia
+  companyStore.setCompanyInfo({
+    companyId: row.companyId,
+    entityCode: row.entityCode,
+    codeName: row.codeName,
+    entityType: row.entityType,
+    typeName: row.typeName
+  })
   // 保存当前entityCode和entityType
   selectEntityCode.value = row.entityCode
   selectEntityType.value = row.entityType
@@ -524,8 +521,7 @@ const queryProperty = async (index, row) => {
   if (propertyList.value.remarkList.length === 0) {
     propertyList.value.remarkList.push({propertyEnglish: 'remark', value: 'char', propertyLength: '256'});
   }
-
-  console.log(propertyList.value);
+  // console.log(propertyList.value);
 }
 
 
@@ -564,7 +560,15 @@ const toPage = (index, row) => {
 const toEvent = (index, row) => {
   console.log(index, row)
   // 将公司数据存入pinia
-  companyStore.setCompanyInfo({companyId: companyId.value})
+  companyStore.setCompanyInfo(
+      {
+        companyId: companyId.value,
+        entityCode: row.entityCode,
+        codeName: row.codeName,
+        entityType: row.entityType,
+        typeName: row.typeName
+      }
+  )
   router.push('/company4')
 };
 

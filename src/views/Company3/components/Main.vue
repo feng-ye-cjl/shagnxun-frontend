@@ -229,10 +229,11 @@
   </div>
 </template>
 <script setup>
-import {ref, onMounted, watchEffect} from 'vue'
+import {ref, onMounted} from 'vue'
 import company2Api from "@/apis/company2.js";
 import {useCompanyStore} from "@/stores/company.js";
 import companyApi from "@/apis/company.js";
+import {ElMessage} from "element-plus";
 
 
 const companyStore = useCompanyStore()
@@ -589,6 +590,13 @@ const addRouter = async () => {
     property_chinese2: entityInfo2.value.propertyName,
   }
   const res = await company2Api.addEntityPageRouter(requestBody)
+  // 若响应码为1则表示添加成功
+  if (res.code === 1) {
+    ElMessage({
+      message: '添加成功',
+      type: 'success',
+    })
+  }
   console.log(res)
 }
 

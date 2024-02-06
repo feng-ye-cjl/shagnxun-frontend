@@ -223,6 +223,13 @@
     <!--  事件表单  -->
     <div class="right">
       <el-form :model="form">
+        <div v-show="selectEntityInfo.isShow">
+          <el-text class="mx-1" size="large">
+            当前主体信息：{{ selectEntityInfo.entityCode }}---{{ selectEntityInfo.codeName }}
+            {{ selectEntityInfo.entityType }}---{{ selectEntityInfo.typeName }}
+            {{ selectEntityInfo.propertyEnglish }}---{{ selectEntityInfo.propertyChinese }}
+          </el-text>
+        </div>
         <!--    其他    -->
         <el-form-item
             :label="item.propertyEnglish"
@@ -430,12 +437,20 @@ const selectEntityType = ref('')
 const selectEventCode = ref('')
 // 当前的objectCode
 const selectObjectCode = ref('')
+
+
 // 查询属性
 const queryProperty = async (index, row) => {
   console.log('当前行属性条件', index, row)
+  // 保存当前事件数据
+  selectEntityInfo.value.propertyChinese = row.propertyChinese === '' ? '空' : row.propertyChinese
+  selectEntityInfo.value.propertyEnglish = row.propertyEnglish === '' ? '空' : row.propertyEnglish
+  selectEntityInfo.value.isShow = true
+  console.log('当前选中的选项',selectEntityInfo.value)
+  console.log(selectEntityInfo.value.codeName === '')
   // 保存事件code
   selectEventCode.value = row.propertyEnglish
-  console.log('当前选中的事件code', selectEventCode.value)
+  // console.log('当前选中的事件code', selectEventCode.value)
   // 先清空属性列表
   propertyList.value = {
     otherList: [],
@@ -469,16 +484,14 @@ const queryProperty = async (index, row) => {
     })
     return;
   }
-  console.log('请求数据', requestBody);
+  // console.log('请求数据', requestBody);
 
   const res = await company2Api.getCompanyEventProperty(requestBody)
-  console.log('查询属性结果', res)
+  // console.log('查询属性结果', res)
   // 保存objectCode
   selectObjectCode.value = res[0].objectCode
   // const res = null
   res.forEach(item => {
-    // item.value = ''
-    console.log(item)
     if (item.propertyEnglish.charAt(0) === 'f') {
       propertyList.value.fieldList.push(item)
     } else if (item.propertyEnglish.charAt(0) === 'n') {
@@ -504,7 +517,7 @@ const queryProperty = async (index, row) => {
   if (propertyList.value.remarkList.length === 0) {
     propertyList.value.remarkList.push({propertyEnglish: 'remark', value: 'char', propertyLength: '256'});
   }
-  console.log(propertyList.value);
+  // console.log(propertyList.value);
 }
 
 // 新增field属性
@@ -649,6 +662,9 @@ const selectRole = (value, index) => {
   roleIndex.value = index
 };
 
+// 当前选中的主体信息
+const selectEntityInfo = ref({isShow: false})
+
 // 获取事件
 const handleEvent = async (index, row) => {
   // 保存当前entityCode和entityType
@@ -656,6 +672,13 @@ const handleEvent = async (index, row) => {
   selectEntityType.value = row.entityType
   propertyTable.value = []
   console.log('当前行数据', row)
+  // 获取并保存当前行数据
+  const {codeName,entityCode,entityType,typeName} = row
+  console.log('当前选中的信息',codeName,entityCode,entityType,typeName)
+  selectEntityInfo.value.codeName = codeName === '' ? '空' : codeName
+  selectEntityInfo.value.entityCode = entityCode === '' ? '空' : entityCode
+  selectEntityInfo.value.entityType = entityType === '' ? '空' : entityType
+  selectEntityInfo.value.typeName = typeName === '' ? '空' : typeName
   // 回显到输入框
   entityInfo.value.entityCode = row.entityCode
   entityInfo.value.codeName = row.entityName
@@ -678,13 +701,11 @@ const handleEvent = async (index, row) => {
     object_code: router2List.value[index].objectCode
   }
   const res = await company2Api.getEntityEventList2(requestBody)
-  console.log('事件查询返回结果', res)
+  // console.log('事件查询返回结果', res)
   res.forEach(item => {
     propertyTable.value.push({
       propertyEnglish: item.eventCode2,
       propertyChinese: item.eventName2,
-      // propertyEnglish2: item.otherPropertyEnglish,
-      // propertyChinese2: item.otherPropertyChinese,
     })
   })
 }
@@ -972,16 +993,18 @@ const addEvent = async () => {
   console.log(res);
 }
 
+
+
 // 初始化函数
 const init = async () => {
   // 获取pinia中的公司数据
   console.log('来自页面1的参数', companyStore.companyInfo)
   // 绑定数据
   companyId.value = companyStore.companyInfo.companyId
-  // entityInfo.value.entityCode = companyStore.companyInfo.entityCode
-  // entityInfo.value.codeName = companyStore.companyInfo.entityName
-  // entityInfo.value.entityType = companyStore.companyInfo.childEntityCode
-  // entityInfo.value.typeName = companyStore.companyInfo.childEntityName
+  entityInfo.value.entityCode = companyStore.companyInfo.entityCode
+  entityInfo.value.codeName = companyStore.companyInfo.codeName
+  entityInfo.value.entityType = companyStore.companyInfo.entityType
+  entityInfo.value.typeName = companyStore.companyInfo.typeName
 }
 
 // onMounted内部必须是一个箭头函数，内部函数体为一个需要执行的方法

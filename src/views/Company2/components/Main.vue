@@ -211,6 +211,7 @@ import {ref, onMounted} from 'vue'
 import company2Api from "@/apis/company2.js";
 import {useCompanyStore} from "@/stores/company.js";
 import companyApi from "@/apis/company.js";
+import {ElMessage} from "element-plus";
 
 
 const companyStore = useCompanyStore()
@@ -491,7 +492,13 @@ const addRouter = async () => {
     property_chinese2: entityInfo2.value.propertyName,
   }
   const res = await company2Api.addEntityMessageRouter(requestBody)
-  console.log(res)
+  if (res.code === 1) {
+    ElMessage({
+      message: '添加成功',
+      type: 'success',
+    })
+  }
+  console.log(res);
 }
 
 // 初始化函数
