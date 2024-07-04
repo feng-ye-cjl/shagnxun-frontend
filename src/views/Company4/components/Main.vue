@@ -811,12 +811,12 @@ const childEntityClick = async (code, index) => {
   console.log(code)
   // 定义事件列表请求体
   const requestBody = {
-    /*Company_id: companyId.value,
+    company_id: companyId.value,
     entity_code: entityCode.value,
-    entity_type: code*/
-    company_id: '50031',
-    entity_code: '303',
-    entity_type: '32'
+    entity_type: code,
+   // company_id: '50031',
+  //  entity_code: '303',
+   // entity_type: '32'
   }
   // 调用远程方法获取事件列表
   const res = await company2Api.getCompanyEntityEvent(requestBody)
@@ -841,12 +841,18 @@ const childEntityClick2 = async (code2, index) => {
   console.log(code2)
   // 定义事件列表请求体
   const requestBody2 = {
-    /*Company_id: companyId.value,
-    entity_code: entityCode2.value,
-    entity_type: code2*/
-    company_id: '50031',
-    entity_code: '303',
-    entity_type: '32'
+
+
+      entity_code: "000",
+      entity_type: "00",
+    //  event_name:null,
+
+   // company_id: companyId.value,
+   // entity_code: entityCode2.value,
+   // entity_type: code2,
+   // company_id: '50031',
+   // entity_code: '303',
+   // entity_type: '32'
 
   }
   // 调用远程方法获取事件列表
