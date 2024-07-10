@@ -3,10 +3,10 @@
     <div class="left">
       <div class="select">
         <!--公司id-->
-        <el-input class="in" v-model="companyId" placeholder="公司id"
+        <el-input class="in" v-model="companyId" placeholder="公司id" @keyup.enter="getCompanyEntity"
                   style="width: 100px; margin-right: 50px"/>
         <!--   根据id查询公司实体列表按钮     -->
-        <el-button type="primary" @click="getCompanyEntity">确认</el-button>
+        <el-button type="primary" @click="getCompanyEntity">查询</el-button>
       </div>
       <div class="select">
         <!--类型-->
@@ -49,8 +49,9 @@
           />
         </el-select>
       </div>
-      <!--   公司信息   -->
+      <!--   公司信息输入框   -->
       <div class="companyInfo">
+        <el-input class="in" v-model="addCompanyId" placeholder="公司id"/>
         <el-input class="in" v-model="entityInfo.groupEntityCode" placeholder="类型代码"/>
         <el-input class="in" v-model="entityInfo.entityCode" placeholder="主体代码"/>
         <el-input class="in" v-model="entityInfo.codeName" placeholder="主体名称"/>
@@ -60,13 +61,20 @@
         <el-button type="primary" @click="addCompanyEntityClick">新增</el-button>
       </div>
       <!--公司主体和子主体表格-->
-      <el-table :data="entityList" style="width: 100%">
+      <el-table ref="multipleTableRef" :data="entityList" v-loading="status"
+                style="width: 100%; height: 59vh; border-radius: 10px"
+                @select="selectClick">
         <el-table-column align="center" label="类型代码" prop="groupEntityCode"/>
-              <el-table-column align="center" label="类型名称" prop="groupEntityName"/>
+        <el-table-column align="center" label="类型名称" prop="groupEntityName"/>
         <el-table-column align="center" label="主体代码" prop="entityCode"/>
         <el-table-column align="center" label="主体名称" prop="codeName"/>
         <el-table-column align="center" label="子主体代码" prop="entityType"/>
         <el-table-column align="center" label="子主体名称" prop="typeName"/>
+        <el-table-column type="selection" align="center">
+          <template #header>
+            选择
+          </template>
+        </el-table-column>
         <el-table-column align="center">
           <template #header>
             操作
@@ -76,7 +84,7 @@
             <el-select
                 v-model="entityList[scope.$index].selectOption"
                 placeholder="操作"
-                style="width: 100px;margin-right: 30px">
+                style="width: 82px;">
               <el-option
                   v-for="(item) in optionList"
                   :key="item.value"
@@ -97,9 +105,9 @@
             当前主体信息：{{ selectEntityInfo.entityCode }}---{{ selectEntityInfo.codeName }}
             {{ selectEntityInfo.entityType }}---{{ selectEntityInfo.typeName }}
           </el-text>
-           <el-text class="mx-1" size="large">
-                                  当前主体属性：{{ entitypropertyflag }}
-           </el-text>
+          <el-text class="mx-1" size="large">
+            当前主体属性：{{ entityPropertyFlag }}
+          </el-text>
         </div>
         <!--    其他    -->
         <el-form-item
@@ -213,12 +221,14 @@
   </div>
 </template>
 <script setup>
-import {ref, reactive, onMounted} from 'vue'
+import {onMounted, reactive, ref} from 'vue'
 import companyApi from "@/apis/company.js";
 import {useRouter} from "vue-router";
 import {useCompanyStore} from "@/stores/company.js";
 import {ElMessage} from "element-plus";
 import company2Api from "@/apis/company2.js";
+import {getSameEntity} from "@/utils/bizUtils.js";
+
 
 // 使用pinia
 const companyStore = useCompanyStore()
@@ -236,7 +246,7 @@ const entityChildArr = ref([])
 // 当前主体名称
 const entityCode = ref('')
 
-const entityType = ref('')
+// const entityType = ref('')
 
 const typeName = ref('')
 // 当前主体名称
@@ -259,13 +269,40 @@ const propertyTypeList = ref([
   {value: 'dic', label: 'dic'},
   {value: 'list10', label: 'list10'},
   {value: 'list11', label: 'list11'},
-   {value: 'image', label: 'image'},
+  {value: 'image', label: 'image'},
 ])
 // 当前选中的作为属性查询的entityCode和entityType
 const selectEntityCode = ref('')
 const selectEntityType = ref('')
 const selectCodeName = ref('')
 const selectTypeName = ref('')
+
+// 表格ref
+const multipleTableRef = ref()
+// 选择到的行数据
+// const multipleSelection = ref([])
+
+/**
+ * table选择项发生变化时会触发该事件
+ * @param selection
+ * @param row
+ */
+const selectClick = (selection, row) => {
+  console.log('row =  ', row)
+  // 回显当前选择的数据
+  const {groupEntityCode, entityCode, codeName, entityType, typeName} = row;
+  entityInfo.value.groupEntityCode = groupEntityCode;
+  entityInfo.value.entityCode = entityCode;
+  entityInfo.value.codeName = codeName;
+  entityInfo.value.entityType = entityType;
+  entityInfo.value.typeName = typeName;
+  if (selection.length > 1) {
+    let del_row = selection.shift();
+    multipleTableRef.value.toggleRowSelection(del_row, false);
+  }
+  // 直接用row查询属性
+  queryProperty(0, row);
+}
 
 // 跳转到公司页面
 const toCompany = item => {
@@ -277,7 +314,7 @@ const toCompany = item => {
     propertyEnglish: item.propertyEnglish,
   })
   // // 路由跳转
-  router.push('company6')
+  router.push('/formula')
 };
 
 
@@ -308,7 +345,6 @@ const addFieldProperty = (item) => {
     }
   }
   propertyList.value.fieldList.push({propertyEnglish: 'field' + (selectNum + 1), value: 'char'})
-
 
 
 }
@@ -421,12 +457,13 @@ const onSubmit = async () => {
     company_id: companyId.value,
     entity_code: selectEntityCode.value,
     entity_type: selectEntityType.value,
-    code_name:selectCodeName.value,
-    type_name:selectTypeName.value,
+    code_name: selectCodeName.value,
+    type_name: selectTypeName.value,
     property_list: jsonStr
   }
   console.log('当前添加条件', requestBody)
   const res = await company2Api.addCompanyEntityProperty(requestBody)
+  console.log('add property res = ', res)
   // 若响应码为1则表示添加成功
   if (res.code === 1) {
     ElMessage({
@@ -436,29 +473,28 @@ const onSubmit = async () => {
   }
   console.log(res);
 
-  if(entitypropertyres1.value === 0){
-      //如果通用主体属性也没有，则也增加通用主体属性
-        const requestBody1 = {
-          company_id: "101",
-          entity_code: selectEntityCode.value,
-          entity_type: selectEntityType.value,
-           code_name:selectCodeName.value,
-              type_name:selectTypeName.value,
-          property_list: jsonStr
-        }
-        console.log('当前添加条件', requestBody)
-        const res1 = await company2Api.addCompanyEntityProperty(requestBody1)
-        // 若响应码为1则表示添加成功
-        if (res1.code === 1) {
-          ElMessage({
-            message: '通用主体属性添加成功',
-            type: 'success',
-          })
-        }
-
+  if (entityPropertyRes1.value === 0) {
+    //如果通用主体属性也没有，则也增加通用主体属性
+    const requestBody1 = {
+      company_id: "101",
+      entity_code: selectEntityCode.value,
+      entity_type: selectEntityType.value,
+      code_name: selectCodeName.value,
+      type_name: selectTypeName.value,
+      property_list: jsonStr
+    }
+    console.log('当前添加条件', requestBody)
+    const res1 = await company2Api.addCompanyEntityProperty(requestBody1)
+    // 若响应码为1则表示添加成功
+    if (res1.code === 1) {
+      ElMessage({
+        message: '通用主体属性添加成功',
+        type: 'success',
+      })
+    }
   }
-
-
+  // 新增属性的同时新增公司实体
+  await addCompanyEntityClick();
 }
 // 操作列表
 const optionList = ref([
@@ -507,15 +543,12 @@ const selectOption = (item, index, row) => {
   // 给当前主体信息赋值
   selectEntityInfo.value = entityList.value[index]
   selectEntityInfo.value.isShow = true
- console.log('当前entityCode', selectEntityInfo.value.entityCode);
+  console.log('当前entityCode', selectEntityInfo.value.entityCode);
   entityInfo.value.groupEntityCode = selectEntityInfo.value.groupEntityCode;
   entityInfo.value.entityCode = selectEntityInfo.value.entityCode;
   entityInfo.value.codeName = selectEntityInfo.value.codeName;
   entityInfo.value.entityType = selectEntityInfo.value.entityType;
   entityInfo.value.typeName = selectEntityInfo.value.typeName;
-
-
-
 }
 
 // 查询属性
@@ -533,8 +566,8 @@ const queryProperty = async (index, row) => {
   selectEntityCode.value = row.entityCode
   selectEntityType.value = row.entityType
 
-    selectCodeName.value = row.codeName
-    selectTypeName.value = row.typeName
+  selectCodeName.value = row.codeName
+  selectTypeName.value = row.typeName
   // 先清空属性列表
   propertyList.value = {
     otherList: [],
@@ -550,10 +583,10 @@ const queryProperty = async (index, row) => {
   }
   // console.log(requestBody)
   const res = await companyApi.getCompanyEntityProperty(requestBody)
-  console.log("res",res);
-  if(res.length === 0){
-     //本公司没有定义，从通用主体属性获取，通用company_id为101
-     entitypropertyflag.value = "通用主体属性";
+  // console.log("res", res);
+  if (res.length === 0) {
+    //本公司没有定义，从通用主体属性获取，通用company_id为101
+    entityPropertyFlag.value = "通用主体属性";
     const requestBody1 = {
       company_id: "101",
       entity_code: row.entityCode,
@@ -561,38 +594,38 @@ const queryProperty = async (index, row) => {
     }
     // console.log(requestBody)
     const res1 = await companyApi.getCompanyEntityProperty(requestBody1)
-         entitypropertyres1.value = res1.length;
-     res1.forEach(item => {
-        if (item.propertyEnglish.charAt(0) === 'f') {
-          propertyList.value.fieldList.push(item)
-        } else if (item.propertyEnglish.charAt(0) === 'n') {
-          propertyList.value.numberList.push(item)
-        } else if (item.propertyEnglish.charAt(0) === 'a') {
-          propertyList.value.accessoryList.push(item)
-        } else if (item.propertyEnglish.charAt(0) === 'r') {
-          propertyList.value.remarkList.push(item);
-        } else {
-          propertyList.value.otherList.push(item);
-        }
-      })
+    entityPropertyRes1.value = res1.length;
+    res1.forEach(item => {
+      if (item.propertyEnglish.charAt(0) === 'f') {
+        propertyList.value.fieldList.push(item)
+      } else if (item.propertyEnglish.charAt(0) === 'n') {
+        propertyList.value.numberList.push(item)
+      } else if (item.propertyEnglish.charAt(0) === 'a') {
+        propertyList.value.accessoryList.push(item)
+      } else if (item.propertyEnglish.charAt(0) === 'r') {
+        propertyList.value.remarkList.push(item);
+      } else {
+        propertyList.value.otherList.push(item);
+      }
+    })
 
 
-  }else{
-     entitypropertyflag.value = "本公司主体属性";
-      entitypropertyres1.value = 1;
-  res.forEach(item => {
-    if (item.propertyEnglish.charAt(0) === 'f') {
-      propertyList.value.fieldList.push(item)
-    } else if (item.propertyEnglish.charAt(0) === 'n') {
-      propertyList.value.numberList.push(item)
-    } else if (item.propertyEnglish.charAt(0) === 'a') {
-      propertyList.value.accessoryList.push(item)
-    } else if (item.propertyEnglish.charAt(0) === 'r') {
-      propertyList.value.remarkList.push(item);
-    } else {
-      propertyList.value.otherList.push(item);
-    }
-  })
+  } else {
+    entityPropertyFlag.value = "本公司主体属性";
+    entityPropertyRes1.value = 1;
+    res.forEach(item => {
+      if (item.propertyEnglish.charAt(0) === 'f') {
+        propertyList.value.fieldList.push(item)
+      } else if (item.propertyEnglish.charAt(0) === 'n') {
+        propertyList.value.numberList.push(item)
+      } else if (item.propertyEnglish.charAt(0) === 'a') {
+        propertyList.value.accessoryList.push(item)
+      } else if (item.propertyEnglish.charAt(0) === 'r') {
+        propertyList.value.remarkList.push(item);
+      } else {
+        propertyList.value.otherList.push(item);
+      }
+    })
   }
   // 如果其中一个数组为空则默认填充一条记录
   if (propertyList.value.fieldList.length === 0) {
@@ -631,7 +664,7 @@ const handleJump = (index, row) => {
   companyStore.setCompanyInfo(companyInfo)
   console.log(companyStore.companyInfo)
   // 路由跳转
-  router.push('/company2')
+  router.push('/message')
 }
 
 // 跳转到页面
@@ -639,7 +672,7 @@ const toPage = (index, row) => {
   console.log(index, row)
   // 将公司数据存入pinia
   companyStore.setCompanyInfo({companyId: companyId.value})
-  router.push('/company3')
+  router.push('/page')
 };
 
 // 跳转到事件页面
@@ -655,63 +688,115 @@ const toEvent = (index, row) => {
         typeName: row.typeName
       }
   )
-  router.push('/company4')
+  router.push('/event')
 };
 
 // 表格数据
-// const tableData = ref([])
 // 公司主体表格列表
 const entityList = ref([])
 // 公司id
 const companyId = ref('')
 
-const entitypropertyflag = ref('')
-const entitypropertyres1 = ref('')
+const entityPropertyFlag = ref('')
+const entityPropertyRes1 = ref('')
 
-// 根据公司id获取公司列表数据用于渲染到表格
+/**
+ * 复选框方法
+ * @param rows
+ */
+const toggleSelection = (rows) => {
+  if (rows) {
+    rows.forEach((row) => {
+      // TODO: improvement typing when refactor table
+      multipleTableRef.value.toggleRowSelection(row, undefined)
+    })
+  } else {
+    multipleTableRef.value.clearSelection()
+  }
+}
+
+/**
+ * 根据公司id获取公司列表数据用于渲染到表格
+ * @return {Promise<void>}
+ */
 const getCompanyEntity = async () => {
+  // 清空输入框
+  entityInfo.value = {};
+  addCompanyId.value = '';
   // 构造请求对象
   const requestBody = {
     company_id: companyId.value,
     group_entity_code: '101'
   }
+  await _getCompanyEntity(requestBody);
+  // 循环50043相同记录数
+  if (requestBody.company_id === '50043') {
+    // console.log('开始循环50043相同记录数')
+    // console.log('originEntityList.value', originEntityList.value)
+    // console.log('entityList.value', entityList.value)
+    let sameEntityList = getSameEntity(originEntityList.value, entityList.value)
+    sameEntityList.forEach(item => {
+      item.companyId = '50043'
+    });
+    // console.log('sameEntityList', sameEntityList);
+    console.log(entityList.value[0])
+    // 勾选相同的列数据
+    toggleSelection(sameEntityList)
+  }
+}
+
+
+// 表格数据加载状态
+const status = ref(true);
+// 00000公司信息保存
+const originEntityList = ref([])
+const _getCompanyEntity = async (requestBody) => {
+  status.value = true
   const res = await companyApi.getCompany(requestBody)
-  console.log(res)
+  // 保存00000公司信息
+  if (requestBody.company_id === '00000') {
+    originEntityList.value = res;
+  }
+  // console.log(res)
   entityList.value = res
   // 事件列表中每一项加上当前选择的操作名称
   entityList.value.forEach(item => {
     item.selectOption = ''
   });
-}
+  status.value = false
+};
 
+// 新增公司id
+const addCompanyId = ref()
 
 // 根据公司id获取公司列表数据用于渲染到表格
 const addCompanyEntityClick = async () => {
+  // 非空判断
+  if (addCompanyId.value === '') {
+    ElMessage.warning('请输入公司id');
+    return
+  }
+  let keys = Object.keys(entityInfo.value);
+  console.log('keys = ', keys);
+  if (keys.length < 5) {
+    ElMessage.warning('请输入完整实体信息');
+    return
+  }
   // 构造请求对象
   console.log('addCompanyEntity entityInfo', entityInfo);
   const requestBody = {
-    company_id: companyId.value,
+    company_id: addCompanyId.value,
     group_entity_code: entityInfo.value.groupEntityCode,
     entity_code: entityInfo.value.entityCode,
     code_name: entityInfo.value.codeName,
     entity_type: entityInfo.value.entityType,
     type_name: entityInfo.value.typeName
-  }
+  };
   const res = await companyApi.addCompanyEntity(requestBody)
   console.log(res)
-
-
   if (res.code === 1) {
-      ElMessage({
-        message: '本公司主体添加成功',
-        type: 'success',
-      })
-    }
-
-  // const res = await addCompanyEntity(requestBody)
-  // console.log('主体增加返回', res);
-  // entityList.value = res.filter(item => item.code === Number(companyId.value));
-  // entityList.value = res
+    ElMessage.success(addCompanyId.value + '公司主体添加成功');
+  }
 }
 
 
@@ -743,21 +828,21 @@ const selectFn = (code) => {
   // 获取之前先清空子实体数组
   entityChildArr.value = []
   // 根据主体名称获取当前主体项中的子主体列表
-  console.log('主体列表',allEntityList.value)
+  console.log('主体列表', allEntityList.value)
   entityCode.value = code
   allEntityList.value.forEach(item => {
     if (code === item.entityCode) {
       if (item.entityType !== '') {
         entityChildArr.value.push({
-        value: item.entityType,
-        label: item.typeName,
-      })
+          value: item.entityType,
+          label: item.typeName,
+        })
       }
     }
   })
 
-   console.log('主体code',entityCode.value)
-  console.log('主体列表2',entityChildArr.value)
+  console.log('主体code', entityCode.value)
+  console.log('主体列表2', entityChildArr.value)
 }
 
 
@@ -770,7 +855,7 @@ const getCompanyDetail = code => {
     }
   })
   console.log('entityInfo=', entityInfo.value.entityCode);
-   console.log('entityInfo2=', entityInfo.value);
+  console.log('entityInfo2=', entityInfo.value);
 
 }
 
@@ -788,19 +873,15 @@ const form = reactive({
   desc: '',
 })
 
+/**
+ * 初始数据填充
+ */
+const initData = () => {
+  typeArr.value.push({
+    value: '101',
+    label: '页面',
 
-// 初始化函数
-const init = async () => {
-  const requestBody = {
-    company_id: "00000",
-    group_entity_code: "000",
-    entity_type: ""
-  }
-   typeArr.value.push({
-      value: '101',
-      label: '页面',
-
-    })
+  })
 
   typeArr.value.push({
     value: '01',
@@ -814,7 +895,7 @@ const init = async () => {
   })
 
 
- typeArr.value.push({
+  typeArr.value.push({
     value: '03',
     label: '产业',
 
@@ -827,10 +908,10 @@ const init = async () => {
   typeArr.value.push({
     value: '05',
     label: '生产',
-      })
+  })
 
 
- typeArr.value.push({
+  typeArr.value.push({
     value: '06',
     label: '营销',
 
@@ -843,11 +924,10 @@ const init = async () => {
   typeArr.value.push({
     value: '08',
     label: '其他',
-      })
+  })
 
 
-
- typeArr.value.push({
+  typeArr.value.push({
     value: '09',
     label: '法律',
 
@@ -860,11 +940,10 @@ const init = async () => {
   typeArr.value.push({
     value: '11',
     label: '物流',
-      })
+  })
 
 
-
- typeArr.value.push({
+  typeArr.value.push({
     value: '12',
     label: '地图',
 
@@ -877,38 +956,49 @@ const init = async () => {
   typeArr.value.push({
     value: '14',
     label: '流程',
-      })
+  })
 
-        typeArr.value.push({
-          value: '16',
-          label: '财务',
-            })
+  typeArr.value.push({
+    value: '16',
+    label: '财务',
+  })
 
- typeArr.value.push({
-          value: '17',
-          label: '金融',
-            })
+  typeArr.value.push({
+    value: '17',
+    label: '金融',
+  })
 
- typeArr.value.push({
-          value: '18',
-          label: '文档',
-            })
+  typeArr.value.push({
+    value: '18',
+    label: '文档',
+  })
 
-             typeArr.value.push({
-                      value: '19',
-                      label: '报告',
-                        })
+  typeArr.value.push({
+    value: '19',
+    label: '报告',
+  })
 
-     typeArr.value.push({
-                      value: '90',
-                      label: '售后',
-                        })
-             typeArr.value.push({
-                              value: '99',
-                               label: '日志',
-                                      })
+  typeArr.value.push({
+    value: '90',
+    label: '售后',
+  })
+  typeArr.value.push({
+    value: '99',
+    label: '日志',
+  })
+};
 
-console.log("初始化，allEntityList requestBody",requestBody);
+
+// 初始化函数
+const init = async () => {
+  const requestBody = {
+    company_id: "00000",
+    group_entity_code: "000",
+    entity_type: ""
+  }
+  initData();
+
+  console.log("初始化，allEntityList requestBody", requestBody);
   // 使用封装的请求方法
   const res = await companyApi.getCompany0(requestBody)
 
@@ -929,10 +1019,17 @@ console.log("初始化，allEntityList requestBody",requestBody);
       }
     }
   }
-  console.log(allEntityList.value)
+  // console.log('entityList = ', entityList.value)
+  // console.log('allEntityList = ', allEntityList.value)
+
+  // 初始化00000公司数据
+  const requestParams = {
+    company_id: '00000',
+    group_entity_code: '101'
+  }
+  await _getCompanyEntity(requestParams);
 }
 
-// onMounted内部必须是一个箭头函数，内部函数体为一个需要执行的方法
 onMounted(() => {
   // 页面挂载后初始化
   console.log("初始化")
@@ -942,10 +1039,15 @@ onMounted(() => {
 
 
 <style scoped lang="scss">
+// 隐藏全选按钮
+:deep(.el-table th.el-table__cell:nth-child(7) .cell) {
+  visibility: hidden;
+}
+
 .main {
   .left {
     float: left;
-    width: 657px;
+    width: 706px;
 
     .el-button + .el-button {
       margin: 0;

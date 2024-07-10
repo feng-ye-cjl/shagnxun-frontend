@@ -49,7 +49,7 @@
           />
         </el-select>
       </div>
-      <!--   公司信息   -->
+      <!--   公司信息输入框   -->
       <div class="companyInfo">
         <el-input class="in" v-model="entityInfo.groupEntityCode" placeholder="类型代码"/>
         <el-input class="in" v-model="entityInfo.entityCode" placeholder="主体代码"/>
@@ -60,9 +60,9 @@
         <el-button type="primary" @click="addCompanyEntityClick">新增</el-button>
       </div>
       <!--公司主体和子主体表格-->
-      <el-table :data="entityList" style="width: 100%">
+      <el-table :data="entityList" style="width: 100%; height: 59vh; border-radius: 10px">
         <el-table-column align="center" label="类型代码" prop="groupEntityCode"/>
-              <el-table-column align="center" label="类型名称" prop="groupEntityName"/>
+        <el-table-column align="center" label="类型名称" prop="groupEntityName"/>
         <el-table-column align="center" label="主体代码" prop="entityCode"/>
         <el-table-column align="center" label="主体名称" prop="codeName"/>
         <el-table-column align="center" label="子主体代码" prop="entityType"/>
@@ -76,7 +76,7 @@
             <el-select
                 v-model="entityList[scope.$index].selectOption"
                 placeholder="操作"
-                style="width: 100px;margin-right: 30px">
+                style="width: 82px;margin-right: 30px">
               <el-option
                   v-for="(item) in optionList"
                   :key="item.value"
@@ -97,9 +97,9 @@
             当前主体信息：{{ selectEntityInfo.entityCode }}---{{ selectEntityInfo.codeName }}
             {{ selectEntityInfo.entityType }}---{{ selectEntityInfo.typeName }}
           </el-text>
-           <el-text class="mx-1" size="large">
-                                  当前主体属性：{{ entitypropertyflag }}
-           </el-text>
+          <el-text class="mx-1" size="large">
+            当前主体属性：{{ entitypropertyflag }}
+          </el-text>
         </div>
         <!--    其他    -->
         <el-form-item
@@ -236,7 +236,7 @@ const entityChildArr = ref([])
 // 当前主体名称
 const entityCode = ref('')
 
-const entityType = ref('')
+// const entityType = ref('')
 
 const typeName = ref('')
 // 当前主体名称
@@ -259,7 +259,7 @@ const propertyTypeList = ref([
   {value: 'dic', label: 'dic'},
   {value: 'list10', label: 'list10'},
   {value: 'list11', label: 'list11'},
-   {value: 'image', label: 'image'},
+  {value: 'image', label: 'image'},
 ])
 // 当前选中的作为属性查询的entityCode和entityType
 const selectEntityCode = ref('')
@@ -277,7 +277,7 @@ const toCompany = item => {
     propertyEnglish: item.propertyEnglish,
   })
   // // 路由跳转
-  router.push('company6')
+  router.push('/formula')
 };
 
 
@@ -308,7 +308,6 @@ const addFieldProperty = (item) => {
     }
   }
   propertyList.value.fieldList.push({propertyEnglish: 'field' + (selectNum + 1), value: 'char'})
-
 
 
 }
@@ -421,8 +420,8 @@ const onSubmit = async () => {
     company_id: companyId.value,
     entity_code: selectEntityCode.value,
     entity_type: selectEntityType.value,
-    code_name:selectCodeName.value,
-    type_name:selectTypeName.value,
+    code_name: selectCodeName.value,
+    type_name: selectTypeName.value,
     property_list: jsonStr
   }
   console.log('当前添加条件', requestBody)
@@ -436,25 +435,25 @@ const onSubmit = async () => {
   }
   console.log(res);
 
-  if(entitypropertyres1.value === 0){
-      //如果通用主体属性也没有，则也增加通用主体属性
-        const requestBody1 = {
-          company_id: "101",
-          entity_code: selectEntityCode.value,
-          entity_type: selectEntityType.value,
-           code_name:selectCodeName.value,
-              type_name:selectTypeName.value,
-          property_list: jsonStr
-        }
-        console.log('当前添加条件', requestBody)
-        const res1 = await company2Api.addCompanyEntityProperty(requestBody1)
-        // 若响应码为1则表示添加成功
-        if (res1.code === 1) {
-          ElMessage({
-            message: '通用主体属性添加成功',
-            type: 'success',
-          })
-        }
+  if (entitypropertyres1.value === 0) {
+    //如果通用主体属性也没有，则也增加通用主体属性
+    const requestBody1 = {
+      company_id: "101",
+      entity_code: selectEntityCode.value,
+      entity_type: selectEntityType.value,
+      code_name: selectCodeName.value,
+      type_name: selectTypeName.value,
+      property_list: jsonStr
+    }
+    console.log('当前添加条件', requestBody)
+    const res1 = await company2Api.addCompanyEntityProperty(requestBody1)
+    // 若响应码为1则表示添加成功
+    if (res1.code === 1) {
+      ElMessage({
+        message: '通用主体属性添加成功',
+        type: 'success',
+      })
+    }
 
   }
 
@@ -507,13 +506,12 @@ const selectOption = (item, index, row) => {
   // 给当前主体信息赋值
   selectEntityInfo.value = entityList.value[index]
   selectEntityInfo.value.isShow = true
- console.log('当前entityCode', selectEntityInfo.value.entityCode);
+  console.log('当前entityCode', selectEntityInfo.value.entityCode);
   entityInfo.value.groupEntityCode = selectEntityInfo.value.groupEntityCode;
   entityInfo.value.entityCode = selectEntityInfo.value.entityCode;
   entityInfo.value.codeName = selectEntityInfo.value.codeName;
   entityInfo.value.entityType = selectEntityInfo.value.entityType;
   entityInfo.value.typeName = selectEntityInfo.value.typeName;
-
 
 
 }
@@ -533,8 +531,8 @@ const queryProperty = async (index, row) => {
   selectEntityCode.value = row.entityCode
   selectEntityType.value = row.entityType
 
-    selectCodeName.value = row.codeName
-    selectTypeName.value = row.typeName
+  selectCodeName.value = row.codeName
+  selectTypeName.value = row.typeName
   // 先清空属性列表
   propertyList.value = {
     otherList: [],
@@ -550,10 +548,10 @@ const queryProperty = async (index, row) => {
   }
   // console.log(requestBody)
   const res = await companyApi.getCompanyEntityProperty(requestBody)
-  console.log("res",res);
-  if(res.length === 0){
-     //本公司没有定义，从通用主体属性获取，通用company_id为101
-     entitypropertyflag.value = "通用主体属性";
+  console.log("res", res);
+  if (res.length === 0) {
+    //本公司没有定义，从通用主体属性获取，通用company_id为101
+    entitypropertyflag.value = "通用主体属性";
     const requestBody1 = {
       company_id: "101",
       entity_code: row.entityCode,
@@ -561,38 +559,38 @@ const queryProperty = async (index, row) => {
     }
     // console.log(requestBody)
     const res1 = await companyApi.getCompanyEntityProperty(requestBody1)
-         entitypropertyres1.value = res1.length;
-     res1.forEach(item => {
-        if (item.propertyEnglish.charAt(0) === 'f') {
-          propertyList.value.fieldList.push(item)
-        } else if (item.propertyEnglish.charAt(0) === 'n') {
-          propertyList.value.numberList.push(item)
-        } else if (item.propertyEnglish.charAt(0) === 'a') {
-          propertyList.value.accessoryList.push(item)
-        } else if (item.propertyEnglish.charAt(0) === 'r') {
-          propertyList.value.remarkList.push(item);
-        } else {
-          propertyList.value.otherList.push(item);
-        }
-      })
+    entitypropertyres1.value = res1.length;
+    res1.forEach(item => {
+      if (item.propertyEnglish.charAt(0) === 'f') {
+        propertyList.value.fieldList.push(item)
+      } else if (item.propertyEnglish.charAt(0) === 'n') {
+        propertyList.value.numberList.push(item)
+      } else if (item.propertyEnglish.charAt(0) === 'a') {
+        propertyList.value.accessoryList.push(item)
+      } else if (item.propertyEnglish.charAt(0) === 'r') {
+        propertyList.value.remarkList.push(item);
+      } else {
+        propertyList.value.otherList.push(item);
+      }
+    })
 
 
-  }else{
-     entitypropertyflag.value = "本公司主体属性";
-      entitypropertyres1.value = 1;
-  res.forEach(item => {
-    if (item.propertyEnglish.charAt(0) === 'f') {
-      propertyList.value.fieldList.push(item)
-    } else if (item.propertyEnglish.charAt(0) === 'n') {
-      propertyList.value.numberList.push(item)
-    } else if (item.propertyEnglish.charAt(0) === 'a') {
-      propertyList.value.accessoryList.push(item)
-    } else if (item.propertyEnglish.charAt(0) === 'r') {
-      propertyList.value.remarkList.push(item);
-    } else {
-      propertyList.value.otherList.push(item);
-    }
-  })
+  } else {
+    entitypropertyflag.value = "本公司主体属性";
+    entitypropertyres1.value = 1;
+    res.forEach(item => {
+      if (item.propertyEnglish.charAt(0) === 'f') {
+        propertyList.value.fieldList.push(item)
+      } else if (item.propertyEnglish.charAt(0) === 'n') {
+        propertyList.value.numberList.push(item)
+      } else if (item.propertyEnglish.charAt(0) === 'a') {
+        propertyList.value.accessoryList.push(item)
+      } else if (item.propertyEnglish.charAt(0) === 'r') {
+        propertyList.value.remarkList.push(item);
+      } else {
+        propertyList.value.otherList.push(item);
+      }
+    })
   }
   // 如果其中一个数组为空则默认填充一条记录
   if (propertyList.value.fieldList.length === 0) {
@@ -631,7 +629,7 @@ const handleJump = (index, row) => {
   companyStore.setCompanyInfo(companyInfo)
   console.log(companyStore.companyInfo)
   // 路由跳转
-  router.push('/company2')
+  router.push('/message')
 }
 
 // 跳转到页面
@@ -639,7 +637,7 @@ const toPage = (index, row) => {
   console.log(index, row)
   // 将公司数据存入pinia
   companyStore.setCompanyInfo({companyId: companyId.value})
-  router.push('/company3')
+  router.push('/page')
 };
 
 // 跳转到事件页面
@@ -655,7 +653,7 @@ const toEvent = (index, row) => {
         typeName: row.typeName
       }
   )
-  router.push('/company4')
+  router.push('/event')
 };
 
 // 表格数据
@@ -685,7 +683,10 @@ const getCompanyEntity = async () => {
 }
 
 
-// 根据公司id获取公司列表数据用于渲染到表格
+/**
+ * 添加公司实体
+ * @return {Promise<void>}
+ */
 const addCompanyEntityClick = async () => {
   // 构造请求对象
   console.log('addCompanyEntity entityInfo', entityInfo);
@@ -702,11 +703,11 @@ const addCompanyEntityClick = async () => {
 
 
   if (res.code === 1) {
-      ElMessage({
-        message: '本公司主体添加成功',
-        type: 'success',
-      })
-    }
+    ElMessage({
+      message: '本公司主体添加成功',
+      type: 'success',
+    })
+  }
 
   // const res = await addCompanyEntity(requestBody)
   // console.log('主体增加返回', res);
@@ -743,21 +744,21 @@ const selectFn = (code) => {
   // 获取之前先清空子实体数组
   entityChildArr.value = []
   // 根据主体名称获取当前主体项中的子主体列表
-  console.log('主体列表',allEntityList.value)
+  console.log('主体列表', allEntityList.value)
   entityCode.value = code
   allEntityList.value.forEach(item => {
     if (code === item.entityCode) {
       if (item.entityType !== '') {
         entityChildArr.value.push({
-        value: item.entityType,
-        label: item.typeName,
-      })
+          value: item.entityType,
+          label: item.typeName,
+        })
       }
     }
   })
 
-   console.log('主体code',entityCode.value)
-  console.log('主体列表2',entityChildArr.value)
+  console.log('主体code', entityCode.value)
+  console.log('主体列表2', entityChildArr.value)
 }
 
 
@@ -770,7 +771,7 @@ const getCompanyDetail = code => {
     }
   })
   console.log('entityInfo=', entityInfo.value.entityCode);
-   console.log('entityInfo2=', entityInfo.value);
+  console.log('entityInfo2=', entityInfo.value);
 
 }
 
@@ -788,19 +789,15 @@ const form = reactive({
   desc: '',
 })
 
+/**
+ * 初始数据填充
+ */
+const initData = () => {
+  typeArr.value.push({
+    value: '101',
+    label: '页面',
 
-// 初始化函数
-const init = async () => {
-  const requestBody = {
-    company_id: "00000",
-    group_entity_code: "000",
-    entity_type: ""
-  }
-   typeArr.value.push({
-      value: '101',
-      label: '页面',
-
-    })
+  })
 
   typeArr.value.push({
     value: '01',
@@ -814,7 +811,7 @@ const init = async () => {
   })
 
 
- typeArr.value.push({
+  typeArr.value.push({
     value: '03',
     label: '产业',
 
@@ -827,10 +824,10 @@ const init = async () => {
   typeArr.value.push({
     value: '05',
     label: '生产',
-      })
+  })
 
 
- typeArr.value.push({
+  typeArr.value.push({
     value: '06',
     label: '营销',
 
@@ -843,11 +840,10 @@ const init = async () => {
   typeArr.value.push({
     value: '08',
     label: '其他',
-      })
+  })
 
 
-
- typeArr.value.push({
+  typeArr.value.push({
     value: '09',
     label: '法律',
 
@@ -860,11 +856,10 @@ const init = async () => {
   typeArr.value.push({
     value: '11',
     label: '物流',
-      })
+  })
 
 
-
- typeArr.value.push({
+  typeArr.value.push({
     value: '12',
     label: '地图',
 
@@ -877,38 +872,49 @@ const init = async () => {
   typeArr.value.push({
     value: '14',
     label: '流程',
-      })
+  })
 
-        typeArr.value.push({
-          value: '16',
-          label: '财务',
-            })
+  typeArr.value.push({
+    value: '16',
+    label: '财务',
+  })
 
- typeArr.value.push({
-          value: '17',
-          label: '金融',
-            })
+  typeArr.value.push({
+    value: '17',
+    label: '金融',
+  })
 
- typeArr.value.push({
-          value: '18',
-          label: '文档',
-            })
+  typeArr.value.push({
+    value: '18',
+    label: '文档',
+  })
 
-             typeArr.value.push({
-                      value: '19',
-                      label: '报告',
-                        })
+  typeArr.value.push({
+    value: '19',
+    label: '报告',
+  })
 
-     typeArr.value.push({
-                      value: '90',
-                      label: '售后',
-                        })
-             typeArr.value.push({
-                              value: '99',
-                               label: '日志',
-                                      })
+  typeArr.value.push({
+    value: '90',
+    label: '售后',
+  })
+  typeArr.value.push({
+    value: '99',
+    label: '日志',
+  })
+};
 
-console.log("初始化，allEntityList requestBody",requestBody);
+
+// 初始化函数
+const init = async () => {
+  const requestBody = {
+    company_id: "00000",
+    group_entity_code: "000",
+    entity_type: ""
+  }
+  initData();
+
+  console.log("初始化，allEntityList requestBody", requestBody);
   // 使用封装的请求方法
   const res = await companyApi.getCompany0(requestBody)
 
@@ -929,7 +935,8 @@ console.log("初始化，allEntityList requestBody",requestBody);
       }
     }
   }
-  console.log(allEntityList.value)
+  console.log('entityList = ', entityList.value)
+  console.log('allEntityList = ', allEntityList.value)
 }
 
 // onMounted内部必须是一个箭头函数，内部函数体为一个需要执行的方法

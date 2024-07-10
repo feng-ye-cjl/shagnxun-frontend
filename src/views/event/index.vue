@@ -165,7 +165,7 @@
         <el-button type="primary" @click="addEvent">新增</el-button>
       </div>
       <!--公司主体和子主体表格-->
-      <el-table :data="tableList" style="width: 100%">
+      <el-table :data="tableList" style="width: 100%; max-height: 400px;">
         <el-table-column align="center" label="主体代码" prop="entityCode"/>
         <el-table-column align="center" label="主体名称" prop="codeName"/>
         <el-table-column align="center" label="子主体代码" prop="entityType"/>
@@ -647,7 +647,7 @@ const toList = (item) => {
       }
   )
   // 跳转路由
-  router.push('/company5')
+  router.push('/list')
 }
 
 // 选择类型
