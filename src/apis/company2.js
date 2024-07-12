@@ -1,7 +1,11 @@
 import http from '@/utils/http'
 
 
-
+/**
+ * 主体事件查询接口（支持模糊查询）
+ * @param data
+ * @return {*}
+ */
 function getCompanyEntityEvent(data) {
     return requestUrl(data, '/getCompanyEntityevent')
 }
@@ -97,6 +101,7 @@ function addCompanyEventProperty(data) {
 function addEntityListRouter(data) {
     return requestUrl(data, '/addEntityLIstRouter')
 }
+
 
 /**
  * 新增实体接口

@@ -1,10 +1,3 @@
-import Company from "@/views/Company/index.vue";
-import Company2 from "@/views/Company2/index.vue";
-import Company3 from "@/views/Company3/index.vue";
-import Company4 from "@/views/Company4/index.vue";
-import Company5 from "@/views/Company5/index.vue";
-import Company6 from "@/views/Company6/index.vue";
-import Company7 from "@/views/Company7/index.vue";
 import Home from '@/views/home/index.vue'
 import Message from '@/views/message/index.vue'
 import Page from '@/views/page/index.vue'
@@ -47,7 +40,7 @@ const routes = [
     },
     {
         path: '/search',
-        name: '模糊查询',
+        name: '模板',
         component: Search
     }
 ]

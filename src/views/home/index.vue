@@ -3,7 +3,7 @@
     <div class="left">
       <div class="select">
         <!--公司id-->
-        <el-input class="in" v-model="companyId" placeholder="公司id"
+        <el-input class="in" v-model="companyId" placeholder="公司id" @keyup.enter="getCompanyEntity"
                   style="width: 100px; margin-right: 50px"/>
         <!--   根据id查询公司实体列表按钮     -->
         <el-button type="primary" @click="getCompanyEntity">确认</el-button>
@@ -60,7 +60,7 @@
         <el-button type="primary" @click="addCompanyEntityClick">新增</el-button>
       </div>
       <!--公司主体和子主体表格-->
-      <el-table :data="entityList" style="width: 100%; height: 59vh; border-radius: 10px">
+      <el-table :data="entityList" style="width: 100%; max-height: 62vh; border-radius: 10px">
         <el-table-column align="center" label="类型代码" prop="groupEntityCode"/>
         <el-table-column align="center" label="类型名称" prop="groupEntityName"/>
         <el-table-column align="center" label="主体代码" prop="entityCode"/>
@@ -480,6 +480,10 @@ const optionList = ref([
   {
     value: '05',
     label: '事件'
+  },
+  {
+    value: '06',
+    label: '弹框'
   }
 ])
 // 当前选中的主体信息
@@ -499,12 +503,15 @@ const selectOption = (item, index, row) => {
   } else if (item.value === '04') {
     console.log('页面')
     toPage(index, row)
+  } else if (item.value === '05') {
+    console.log('事件');
+    toEvent(index, row);
   } else {
-    console.log('事件')
-    toEvent(index, row)
+    console.log('弹框')
+    // toDialog(index, row)
   }
   // 给当前主体信息赋值
-  selectEntityInfo.value = entityList.value[index]
+  selectEntityInfo.value = entityList.value[index];
   selectEntityInfo.value.isShow = true
   console.log('当前entityCode', selectEntityInfo.value.entityCode);
   entityInfo.value.groupEntityCode = selectEntityInfo.value.groupEntityCode;

@@ -137,6 +137,9 @@
               @click="selectEvent2(item.value,index)"
           />
         </el-select>
+        <!--事件查询输入框-->
+        <el-input class="in" v-model="searchEventName" placeholder="请输入事件" @keydown.enter="searchEvent"
+                  style="width: 100px; margin-right: 50px"/>
         <!--属性-->
         <!--        <el-select
                     v-model="propertyName2"
@@ -165,7 +168,7 @@
         <el-button type="primary" @click="addEvent">新增</el-button>
       </div>
       <!--公司主体和子主体表格-->
-      <el-table :data="tableList" style="width: 100%; max-height: 400px;">
+      <el-table :data="tableList" style="width: 100%; max-height: 400px; min-height: 20px">
         <el-table-column align="center" label="主体代码" prop="entityCode"/>
         <el-table-column align="center" label="主体名称" prop="codeName"/>
         <el-table-column align="center" label="子主体代码" prop="entityType"/>
@@ -378,6 +381,7 @@ const eventList = ref([])
 const eventList2 = ref([])
 // 当前主体名称
 const entityName = ref('')
+const entityName2 = ref('')
 // 当前主体代码
 const entityCode = ref('')
 const entityCode2 = ref('')
@@ -402,6 +406,7 @@ const entityInfo = ref({})
 const entityInfo2 = ref({})
 // 事件名称
 const eventName = ref('')
+const eventName2 = ref('')
 // 属性列表
 const propertyList = ref([])
 const propertyList2 = ref([])
@@ -437,6 +442,33 @@ const selectEntityType = ref('')
 const selectEventCode = ref('')
 // 当前的objectCode
 const selectObjectCode = ref('')
+// 当前搜索的事件名
+const searchEventName = ref('')
+
+/**
+ * 查询事件（模糊查询）
+ */
+const searchEvent = () => {
+  // 定义事件列表请求体
+  const requestBody = {
+    Company_id: companyId.value,
+    entity_code: '000',
+    entity_type: '00',
+    event_name: searchEventName.value
+  }
+  // company2Api.getCompanyEntityEvent(requestBody)
+  company2Api.getCompanyEntityEvent(requestBody).then(res => {
+    console.log('模糊查询事件', res)
+    ElMessage.success('查询成功')
+    // console.log('模糊查询事件', res[0])
+    // 先清空事件列表
+    eventList2.value = []
+    // 渲染事件列表
+    res.forEach(item => {
+      eventList2.value.push({value: item.eventCode, label: item.eventName})
+    })
+  })
+};
 
 
 // 查询属性
@@ -446,7 +478,7 @@ const queryProperty = async (index, row) => {
   selectEntityInfo.value.propertyChinese = row.propertyChinese === '' ? '空' : row.propertyChinese
   selectEntityInfo.value.propertyEnglish = row.propertyEnglish === '' ? '空' : row.propertyEnglish
   selectEntityInfo.value.isShow = true
-  console.log('当前选中的选项',selectEntityInfo.value)
+  console.log('当前选中的选项', selectEntityInfo.value)
   console.log(selectEntityInfo.value.codeName === '')
   // 保存事件code
   selectEventCode.value = row.propertyEnglish
@@ -673,8 +705,8 @@ const handleEvent = async (index, row) => {
   propertyTable.value = []
   console.log('当前行数据', row)
   // 获取并保存当前行数据
-  const {codeName,entityCode,entityType,typeName} = row
-  console.log('当前选中的信息',codeName,entityCode,entityType,typeName)
+  const {codeName, entityCode, entityType, typeName} = row
+  console.log('当前选中的信息', codeName, entityCode, entityType, typeName)
   selectEntityInfo.value.codeName = codeName === '' ? '空' : codeName
   selectEntityInfo.value.entityCode = entityCode === '' ? '空' : entityCode
   selectEntityInfo.value.entityType = entityType === '' ? '空' : entityType
@@ -814,13 +846,13 @@ const childEntityClick = async (code, index) => {
     company_id: companyId.value,
     entity_code: entityCode.value,
     entity_type: code,
-   // company_id: '50031',
-  //  entity_code: '303',
-   // entity_type: '32'
+    // company_id: '50031',
+    //  entity_code: '303',
+    // entity_type: '32'
   }
   // 调用远程方法获取事件列表
   const res = await company2Api.getCompanyEntityEvent(requestBody)
-  console.log(res)
+  console.log('event res = ', res)
   // 渲染事件列表
   res.forEach(item => {
     eventList.value.push({value: item.eventCode, label: item.eventName})
@@ -841,23 +873,19 @@ const childEntityClick2 = async (code2, index) => {
   console.log(code2)
   // 定义事件列表请求体
   const requestBody2 = {
-
-
-      entity_code: "000",
-      entity_type: "00",
+    entity_code: "000",
+    entity_type: "00",
     //  event_name:null,
-
-   // company_id: companyId.value,
-   // entity_code: entityCode2.value,
-   // entity_type: code2,
-   // company_id: '50031',
-   // entity_code: '303',
-   // entity_type: '32'
-
+    // company_id: companyId.value,
+    // entity_code: entityCode2.value,
+    // entity_type: code2,
+    // company_id: '50031',
+    // entity_code: '303',
+    // entity_type: '32'
   }
   // 调用远程方法获取事件列表
   const res = await company2Api.getCompanyEntityEvent(requestBody2)
-  console.log(res)
+  console.log('entity res2 = ', res)
   // 渲染事件列表
   res.forEach(item => {
     eventList2.value.push({value: item.eventCode, label: item.eventName})
@@ -900,7 +928,7 @@ const getRouter = async () => {
     })
   })
   // 构造请求对象
-  console.log('当前主体代码类型',entityInfo.value.entityCode === undefined)
+  console.log('当前主体代码类型', entityInfo.value.entityCode === undefined)
   const requestBody = {
     company_id: companyId.value,
     entity_code: entityInfo.value.entityCode === undefined ? '' : entityInfo.value.entityCode,
@@ -998,7 +1026,6 @@ const addEvent = async () => {
   }
   console.log(res);
 }
-
 
 
 // 初始化函数

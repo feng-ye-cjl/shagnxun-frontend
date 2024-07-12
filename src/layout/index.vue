@@ -74,7 +74,7 @@ onMounted(() => {
   background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
 
   .el-main {
-    line-height: 60px;
+    line-height: 45px;
   }
 
   h2 {
