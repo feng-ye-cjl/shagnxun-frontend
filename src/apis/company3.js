@@ -42,6 +42,7 @@ function getFormula(data) {
 }
 
 
+
 const company3Api = {
     queryEntryGeneral,
     getFormula,

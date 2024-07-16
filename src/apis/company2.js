@@ -112,6 +112,16 @@ function addEntityTable(data) {
     return requestUrl(data, '/addEntityTable')
 }
 
+/**
+ * 主体事件增加接口（小程序端）
+ * @param data
+ * @return {*}
+ * @constructor
+ */
+function BusEntityEventServletFloating(data) {
+    return requestUrl(data, '/BusEntityEventServletFloating')
+}
+
 // 接口总体对象
 const company2Api = {
     getCompanyEntityEvent,
@@ -130,7 +140,8 @@ const company2Api = {
     getCompanyEventProperty,
     addCompanyEventProperty,
     addEntityListRouter,
-    addEntityTable
+    addEntityTable,
+    BusEntityEventServletFloating
 }
 
 export default company2Api

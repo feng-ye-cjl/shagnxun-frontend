@@ -61,8 +61,7 @@
         <el-button type="primary" @click="addCompanyEntityClick">新增</el-button>
       </div>
       <!--公司主体和子主体表格-->
-      <el-table ref="multipleTableRef" :data="entityList" v-loading="status"
-                style="width: 100%; height: 59vh; border-radius: 10px"
+      <el-table ref="multipleTableRef" :data="entityList" v-loading="status" style="width: 100%; border-radius: 10px"
                 @select="selectClick">
         <el-table-column align="center" label="类型代码" prop="groupEntityCode"/>
         <el-table-column align="center" label="类型名称" prop="groupEntityName"/>
@@ -517,6 +516,14 @@ const optionList = ref([
   {
     value: '05',
     label: '事件'
+  },
+  {
+    value: '06',
+    label: '弹框'
+  },
+  {
+    value: '07',
+    label: '关系'
   }
 ])
 // 当前选中的主体信息
@@ -536,9 +543,15 @@ const selectOption = (item, index, row) => {
   } else if (item.value === '04') {
     console.log('页面')
     toPage(index, row)
-  } else {
+  } else if (item.value === '05'){
     console.log('事件')
     toEvent(index, row)
+  } else if (item.value === '06'){
+    console.log('弹框')
+    toDialog(index, row)
+  }else if (item.value === '07'){
+    console.log('关系')
+    toRelation(index, row)
   }
   // 给当前主体信息赋值
   selectEntityInfo.value = entityList.value[index]
@@ -550,6 +563,28 @@ const selectOption = (item, index, row) => {
   entityInfo.value.entityType = selectEntityInfo.value.entityType;
   entityInfo.value.typeName = selectEntityInfo.value.typeName;
 }
+
+/**
+ * * 跳转到弹框页面
+ * @param index
+ * @param row
+ */
+const toDialog = (index, row) => {
+  console.log(index, row)
+  router.push('/dialog')
+}
+
+/**
+ * * 跳转到关系页面
+ * @param index
+ * @param row
+ */
+const toRelation = (index, row) => {
+  console.log(index, row)
+  router.push('/relation')
+}
+
+
 
 // 查询属性
 const queryProperty = async (index, row) => {
@@ -699,6 +734,7 @@ const companyId = ref('')
 
 const entityPropertyFlag = ref('')
 const entityPropertyRes1 = ref('')
+
 
 /**
  * 复选框方法

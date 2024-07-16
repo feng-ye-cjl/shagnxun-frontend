@@ -5,6 +5,8 @@ import Event from '@/views/event/index.vue'
 import List from '@/views/list/index.vue'
 import Formula from '@/views/formula/index.vue'
 import Search from '@/views/search/index.vue'
+import Dialog from '@/views/dialog/index.vue'
+import Relation from '@/views/relation/index.vue'
 
 
 const routes = [
@@ -42,6 +44,16 @@ const routes = [
         path: '/search',
         name: '模板',
         component: Search
+    },
+    {
+        path: '/dialog',
+        name: '弹框',
+        component: Dialog
+    },
+    {
+        path: '/relation',
+        name: '关系',
+        component: Relation
     }
 ]
 

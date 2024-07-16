@@ -60,7 +60,7 @@
         <el-button type="primary" @click="addCompanyEntityClick">新增</el-button>
       </div>
       <!--公司主体和子主体表格-->
-      <el-table :data="entityList" style="width: 100%; max-height: 62vh; border-radius: 10px">
+      <el-table :data="entityList" style="width: 100%; border-radius: 10px">
         <el-table-column align="center" label="类型代码" prop="groupEntityCode"/>
         <el-table-column align="center" label="类型名称" prop="groupEntityName"/>
         <el-table-column align="center" label="主体代码" prop="entityCode"/>
@@ -519,8 +519,6 @@ const selectOption = (item, index, row) => {
   entityInfo.value.codeName = selectEntityInfo.value.codeName;
   entityInfo.value.entityType = selectEntityInfo.value.entityType;
   entityInfo.value.typeName = selectEntityInfo.value.typeName;
-
-
 }
 
 // 查询属性
